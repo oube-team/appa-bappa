@@ -1,0 +1,8 @@
+#!/bin/sh
+
+git diff --cached --name-only --diff-filter=ACMR | grep -Eq '\.kts?$' || exit 0
+
+if ! ./gradlew --quiet spotlessCheck; then
+    echo "Kotlin 코드 포매팅이 맞지 않아요. ./gradlew spotlessApply를 실행한 뒤 다시 커밋해 주세요." >&2
+    exit 1
+fi

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if ! ./gradlew --quiet check; then
+    echo "검사를 통과하지 못했어요. 위에 나온 오류를 수정한 뒤 다시 push해 주세요." >&2
+    exit 1
+fi
