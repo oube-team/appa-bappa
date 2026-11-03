@@ -72,7 +72,7 @@ class BusyEngineTest {
     }
 
     @Test
-    fun `방향지시등을 1초만 켜도 BUSY와 RECOVERING을 거친다`() {
+    fun `방향지시등을 1초만 켜도 BUSY와 RECOVERING을 거쳐 FREE로 돌아온다`() {
         val ride = Ride()
         ride.drive(2.0, driving(50.0))
         ride.drive(1.0, driving(50.0, TurnSignal.RIGHT))

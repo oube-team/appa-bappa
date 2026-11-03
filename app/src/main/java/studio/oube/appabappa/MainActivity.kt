@@ -12,15 +12,28 @@ import studio.oube.appabappa.service.BusyService
 private const val PERMISSION_REQUEST = 1
 
 class MainActivity : Activity() {
+    private var demoScene: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // 설정이 변경되어 화면이 다시 생성될 때 같은 장면이 반복해서 재생되지 않도록, 처음 실행할 때만 인텐트에서 장면 이름을 가져온다.
+        if (savedInstanceState == null) {
+            demoScene = intent.getStringExtra(BusyService.EXTRA_DEMO_SCENE)
+        }
         val missing = runtimePermissions().filterNot(::isGranted)
         if (missing.isEmpty()) {
             startBusyService()
         } else {
             requestPermissions(missing.toTypedArray(), PERMISSION_REQUEST)
         }
+    }
+
+    // 앱 화면이 표시된 상태에서 --activity-single-top으로 장면 이름을 전달하면 onCreate 대신 이 함수가 호출된다.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        demoScene = intent.getStringExtra(BusyService.EXTRA_DEMO_SCENE)
+        startBusyService()
     }
 
     override fun onRequestPermissionsResult(
@@ -44,6 +57,8 @@ class MainActivity : Activity() {
         checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 
     private fun startBusyService() {
-        startForegroundService(Intent(this, BusyService::class.java))
+        val service =
+            Intent(this, BusyService::class.java).putExtra(BusyService.EXTRA_DEMO_SCENE, demoScene)
+        startForegroundService(service)
     }
 }
