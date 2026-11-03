@@ -82,7 +82,7 @@ class BusyEngineTest {
     }
 
     @Test
-    fun `기어를 R로 바꾸면 서 있어도 BUSY가 되고 P로 바꾸면 바로 FREE가 된다`() {
+    fun `기어를 R로 변경하면 정차 중이어도 BUSY가 되고 P로 변경하면 바로 FREE가 된다`() {
         val ride = Ride()
         ride.drive(3.0, driving(0.0, gear = Gear.REVERSE))
         ride.drive(1.0, driving(0.0, gear = Gear.PARK))
@@ -102,7 +102,7 @@ class BusyEngineTest {
     }
 
     @Test
-    fun `급제동으로 멈춘 순간에는 속도가 0이어도 VERY_BUSY가 된다`() {
+    fun `급제동으로 정지한 순간에는 차속이 0이어도 VERY_BUSY가 된다`() {
         val engine = BusyEngine()
         engine.update(driving(20.0), 0)
 
@@ -110,7 +110,7 @@ class BusyEngineTest {
     }
 
     @Test
-    fun `방향지시등을 켜지 않아도 핸들을 90도 이상 돌리면 BUSY가 된다`() {
+    fun `방향지시등을 켜지 않아도 스티어링 휠을 90도 이상 돌리면 BUSY가 된다`() {
         val engine = BusyEngine()
 
         assertEquals(FREE, engine.update(driving(20.0, steeringAngleDeg = 30.0), 0))
@@ -137,7 +137,7 @@ class BusyEngineTest {
     }
 
     @Test
-    fun `BUSY가 끝나면 RECOVERING이 5초 동안 이어진다`() {
+    fun `BUSY가 끝나면 RECOVERING이 5초 동안 유지된다`() {
         val engine = BusyEngine()
         engine.update(driving(50.0, TurnSignal.LEFT), 0)
         engine.update(driving(50.0), 250)
@@ -147,7 +147,7 @@ class BusyEngineTest {
     }
 
     @Test
-    fun `VERY_BUSY를 거친 뒤에는 RECOVERING이 10초 동안 이어진다`() {
+    fun `VERY_BUSY를 거친 뒤에는 RECOVERING이 10초 동안 유지된다`() {
         val engine = BusyEngine()
         engine.update(driving(70.0, TurnSignal.RIGHT), 0)
         engine.update(driving(70.0), 250)

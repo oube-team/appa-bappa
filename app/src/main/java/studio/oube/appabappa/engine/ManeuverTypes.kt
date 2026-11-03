@@ -1,7 +1,7 @@
 package studio.oube.appabappa.engine
 
 internal object ManeuverTypes {
-    // 회전하거나 차로를 옮겨야 하는 안내를 넣는다.
+    // 회전하거나 차로를 변경해야 하는 안내를 포함한다.
     private val demanding =
         setOf(
             "TURN_LEFT",

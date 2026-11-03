@@ -5,7 +5,18 @@
         android:name="android.hardware.type.automotive"
         android:required="true" />
 
-    <!-- 앱 아이콘이 정해질 때까지 Android 기본 아이콘을 사용한다. -->
+    <uses-permission android:name="android.car.permission.CAR_SPEED" />
+    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
+    <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
+    <!-- SDK 문서에는 CAR_LIGHTS만 명시되어 있지만, 조명 색을 변경하려면 CONTROL_CAR_LIGHTS도 필요하다. -->
+    <uses-permission android:name="pleos.car.permission.CONTROL_CAR_LIGHTS" />
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 앱 아이콘이 확정될 때까지 Android 기본 아이콘을 사용한다. -->
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -24,5 +35,13 @@
                 android:name="distractionOptimized"
                 android:value="true" />
         </activity>
+        <service
+            android:name=".service.BusyService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="주행 중 차량 신호로 운전자가 바쁜 상황인지 판단해 실내 조명 색을 변경한다" />
+        </service>
     </application>
 </manifest>

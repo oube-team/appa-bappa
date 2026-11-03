@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">아빠 바빠</string>
+    <string name="notification_channel_name">운전 상황 확인</string>
+    <string name="notification_text">운전자가 바쁜지 확인하고 있어요</string>
 </resources>

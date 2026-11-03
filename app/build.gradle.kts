@@ -9,6 +9,7 @@ plugins {
 android {
     namespace = "studio.oube.appabappa"
     compileSdk = 36
+    useLibrary("android.car")
 
     defaultConfig {
         applicationId = "studio.oube.appabappa"
@@ -27,7 +28,7 @@ android {
         warningsAsErrors = true
         // Pleos Connect 에뮬레이터가 API 34라서 targetSdk를 34로 유지한다.
         disable += "OldTargetApi"
-        // 버전을 고정해 두었으므로, 새 버전이 배포될 때마다 빌드를 실패시키는 검사는 제외한다.
+        // 라이브러리 버전을 직접 고정해서 관리하므로, 새 버전이 배포될 때마다 경고로 빌드를 실패시키는 Lint 검사를 제외한다.
         disable += listOf("AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")
     }
 }
@@ -40,5 +41,8 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.pleos.vehicle)
+    implementation(libs.pleos.navihelper)
+    implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit)
 }

@@ -4,9 +4,15 @@ kotlin = "2.2.10"
 spotless = "8.4.0"
 detekt = "1.23.8"
 junit = "4.13.2"
+pleosVehicle = "2.3.2"
+pleosNaviHelper = "3.0.5"
+coreKtx = "1.8.0"
 
 [libraries]
 junit = { module = "junit:junit", version.ref = "junit" }
+pleos-vehicle = { module = "ai.pleos.playground:Vehicle", version.ref = "pleosVehicle" }
+pleos-navihelper = { module = "ai.pleos.playground:NaviHelper", version.ref = "pleosNaviHelper" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
