@@ -24,6 +24,10 @@
         android:icon="@android:drawable/sym_def_app_icon"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+        <!-- 필수 조작을 모두 터치로 할 수 있어서, CCP(로터리 컨트롤러)를 지원하지 않는다고 선언한다(Pleos CCP 개발 가이드). -->
+        <meta-data
+            android:name="com.hmg.rotary.ROTARY_SUPPORTED"
+            android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

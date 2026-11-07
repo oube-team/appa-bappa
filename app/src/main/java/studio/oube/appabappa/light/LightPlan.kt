@@ -25,3 +25,6 @@ internal object LightPlan {
 
     fun isOwnColor(color: Int) = listOf(ORANGE, SOFT_ORANGE, GREEN).any { sameColor(it, color) }
 }
+
+// 알파 값은 비교에 사용하지 않아서, 로그에는 색을 RGB만 기록한다.
+internal fun hex(color: Int?) = color?.let { "#%06X".format(it and LightPlan.RGB_MASK) } ?: "null"

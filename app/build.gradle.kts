@@ -19,6 +19,11 @@ android {
         versionName = "0.1.0"
     }
 
+    buildFeatures {
+        // 출시 빌드에서 진행 로그를 기록하지 않도록 BuildConfig.DEBUG를 사용한다(AppLog).
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

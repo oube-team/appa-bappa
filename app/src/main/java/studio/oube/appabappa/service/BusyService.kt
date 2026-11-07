@@ -9,20 +9,23 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
-import android.util.Log
+import studio.oube.appabappa.AppLog
 import studio.oube.appabappa.demo.DemoRun
 import studio.oube.appabappa.demo.DemoScenes
 import studio.oube.appabappa.engine.BusyEngine
 import studio.oube.appabappa.engine.BusyState
 import studio.oube.appabappa.engine.Gear
+import studio.oube.appabappa.engine.Maneuver
+import studio.oube.appabappa.engine.RouteProgress
 import studio.oube.appabappa.engine.VehicleSignals
 import studio.oube.appabappa.light.AmbientLight
+import studio.oube.appabappa.sdkCall
 import studio.oube.appabappa.vehicle.CarSignals
 import studio.oube.appabappa.vehicle.DriverInputs
 import studio.oube.appabappa.vehicle.NaviGuidance
+import studio.oube.appabappa.vehicle.RouteGuidance
 import studio.oube.appabappa.vehicle.gearOf
 
-private const val TAG = "AppaBappa"
 private const val TICK_MILLIS = 250L
 private const val LIGHT_PREFERENCES = "ambient_light"
 
@@ -30,6 +33,8 @@ private const val LIGHT_PREFERENCES = "ambient_light"
 class BusyService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private val engine = BusyEngine()
+    private val routeProgress = RouteProgress()
+    private var trackedGuidance: RouteGuidance? = null
     private var state = BusyState.FREE
     private var demo: DemoRun? = null
     private var requestedDemoScene: String? = null
@@ -51,29 +56,31 @@ class BusyService : Service() {
     override fun onCreate() {
         super.onCreate()
         startInForeground()
-        vehicle = Vehicle(applicationContext).apply { initialize() }
+        vehicle = Vehicle(applicationContext)
+        sdkCall("vehicle initialize") { vehicle.initialize() }
         car = CarSignals(applicationContext).apply { start() }
         driver = DriverInputs(vehicle).apply { start() }
         navi = NaviGuidance(applicationContext).apply { start() }
         val savedColors = getSharedPreferences(LIGHT_PREFERENCES, MODE_PRIVATE)
         light = AmbientLight(vehicle.getLight(), handler, savedColors).apply { start() }
         handler.post(tick)
-        Log.i(TAG, "busy service started")
+        AppLog.i("busy service started")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.getStringExtra(EXTRA_DEMO_SCENE)?.let { requestedDemoScene = it }
+        car.listenMissing()
         return START_STICKY
     }
 
     override fun onDestroy() {
         handler.removeCallbacks(tick)
-        light.stop()
         navi.stop()
         driver.stop()
         car.stop()
-        vehicle.release()
-        Log.i(TAG, "busy service stopped")
+        // 원래 색으로 되돌리는 요청이 끝나기 전에 Vehicle 연결을 해제하면 주황이 남을 수 있어서, 그 응답을 수신한 뒤에 해제한다.
+        light.stop { sdkCall("vehicle release") { vehicle.release() } }
+        AppLog.i("busy service stopped")
         super.onDestroy()
     }
 
@@ -93,24 +100,37 @@ class BusyService : Service() {
     }
 
     private fun update() {
+        val now = SystemClock.elapsedRealtime()
+        val speedMps = car.speedMps
         val signals =
             VehicleSignals(
-                speedMps = car.speedMps,
+                speedMps = speedMps,
                 gear = gearOf(car.gearSelection),
                 turnSignal = driver.turnSignal,
                 steeringAngleDeg = driver.steeringAngleDeg,
-                nextManeuver = navi.nextManeuver
+                nextManeuver = nextManeuver(speedMps, now)
             )
-        val now = SystemClock.elapsedRealtime()
         val realState = engine.update(signals, now)
         startRequestedDemo(signals.gear, now)
         val next = demoState(signals.gear, now) ?: realState
         if (next != state) {
             val source = demo?.let { "demo ${it.scene.id}" } ?: signals.toString()
-            Log.i(TAG, "state $state -> $next, $source")
+            AppLog.i("state $state -> $next, $source")
             light.show(previous = state, next = next)
             state = next
         }
+    }
+
+    // 내비게이션이 남은 거리를 자주 알려 주지 않아도 제때 판단하도록, 수신한 목록에서 그 뒤 달린 거리를 빼서
+    // 다음 안내까지 남은 거리를 정한다.
+    private fun nextManeuver(speedMps: Double, now: Long): Maneuver? {
+        val guidance = navi.guidance
+        if (guidance !== trackedGuidance) {
+            trackedGuidance = guidance
+            routeProgress.reset(guidance?.maneuvers.orEmpty(), guidance?.receivedAtMillis ?: now)
+        }
+        routeProgress.advance(speedMps, now)
+        return routeProgress.next()
     }
 
     private fun startRequestedDemo(gear: Gear, now: Long) {
@@ -122,14 +142,14 @@ class BusyService : Service() {
         when {
             scene == null -> {
                 val scenes = DemoScenes.all.joinToString { it.id }
-                Log.w(TAG, "unknown demo scene $id, scenes: $scenes")
+                AppLog.w("unknown demo scene $id, scenes: $scenes")
             }
 
-            gear != Gear.PARK -> Log.w(TAG, "demo $id needs gear P, now $gear")
+            gear != Gear.PARK -> AppLog.w("demo $id needs gear P, now $gear")
 
             else -> {
                 demo = DemoRun(scene, now)
-                Log.i(TAG, "demo $id started")
+                AppLog.i("demo $id started")
             }
         }
     }
@@ -139,14 +159,14 @@ class BusyService : Service() {
         val next = run.update(gear, now)
         if (next == null) {
             val reason = if (gear == Gear.PARK) "finished" else "stopped, gear $gear"
-            Log.i(TAG, "demo ${run.scene.id} $reason")
+            AppLog.i("demo ${run.scene.id} $reason")
             demo = null
         }
         return next
     }
 
     companion object {
-        // 앱 화면에 시연 버튼을 추가하기 전까지는 adb 명령으로 장면 이름을 전달한다.
+        // 디버그 빌드에서는 adb 명령으로 장면 이름을 전달해 시연을 시작할 수 있다(MainActivity.demoSceneOf).
         // adb shell am start --activity-single-top -n studio.oube.appabappa/.MainActivity \
         //     --es demo highway_merge
         const val EXTRA_DEMO_SCENE = "demo"
