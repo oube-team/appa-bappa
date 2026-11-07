@@ -11,8 +11,9 @@ import studio.oube.appabappa.AppLog
 import studio.oube.appabappa.engine.BusyState
 import studio.oube.appabappa.sdkCall
 
-private const val OPAQUE = 0xFF000000.toInt()
 private const val ORIGINAL_COLOR_KEY = "original_color"
+private const val CHANGE_FROM_KEY = "change_from_color"
+private const val CHANGE_TO_KEY = "change_to_color"
 private const val GREEN_MILLIS = 3_000L
 private const val STOP_TIMEOUT_MILLIS = 2_000L
 
@@ -33,7 +34,8 @@ private val verifyToken = Any()
 class AmbientLight(
     private val light: Light,
     private val handler: Handler,
-    private val savedColors: SharedPreferences
+    private val savedColors: SharedPreferences,
+    private val isNight: () -> Boolean
 ) {
     // 원래 색을 알아야 되돌릴 수 있으므로, 원래 색을 확인하기 전에는 조명 색을 변경하지 않는다.
     private var cabin: Cabin? = null
@@ -43,7 +45,8 @@ class AmbientLight(
     private var stopping = false
 
     private val probe = LightProbe(light, handler)
-    private val restoreOriginal = Runnable { setColor(null) }
+    private val fade = LightFade(handler)
+    private val restoreOriginal = Runnable { setColor(null, gradually = true) }
 
     private val colorListener =
         object : AmbientLightBrightnessColorListener {
@@ -60,7 +63,18 @@ class AmbientLight(
         light.checkAmbientLightBrightnessColorCapabilities(
             onComplete = { _, areas ->
                 // 에뮬레이터에서는 areas에 차 안 전체 영역 하나만 포함되어 있어서 첫 번째 영역을 사용한다.
-                handler.post { if (!stopping) areas.firstOrNull()?.let { readOriginalColor(it) } }
+                handler.post {
+                    val area = areas.firstOrNull()
+                    if (!stopping && area != null) {
+                        light.getAmbientLightBrightnessColor(
+                            area = area,
+                            onComplete = { color ->
+                                handler.post { rememberOriginal(area, color) }
+                            },
+                            onFailed = { AppLog.w("ambient light color read failed", it) }
+                        )
+                    }
+                }
             },
             onFailed = { AppLog.w("ambient light capability failed", it) }
         )
@@ -69,11 +83,17 @@ class AmbientLight(
     fun show(previous: BusyState, next: BusyState) {
         handler.removeCallbacks(restoreOriginal)
         if (LightPlan.showsGreen(previous, next)) {
-            setColor(LightPlan.GREEN)
-            handler.postDelayed(restoreOriginal, GREEN_MILLIS)
+            setColor(LightPlan.GREEN, gradually = true)
+            // 초록으로 다 바뀐 뒤 GREEN_MILLIS 동안 켜 두도록, 변경하는 시간(FADE_MILLIS)만큼 더 기다렸다가 원래 색으로 되돌린다.
+            handler.postDelayed(restoreOriginal, FADE_MILLIS + GREEN_MILLIS)
         } else {
-            setColor(LightPlan.colorFor(next))
+            setColor(LightPlan.colorFor(next), gradually = true)
         }
+    }
+
+    // isNight 값이 바뀌면 켜 둔 앱의 색을 새 밝기로 변경한다. 원래 색은 밝기를 낮추지 않아서, 켜 둔 동안에는 변경하지 않는다.
+    fun refresh() {
+        wantedColor?.let { setColor(it, gradually = true) }
     }
 
     // 조명을 원래 색으로 되돌리고, 그 요청의 응답을 수신한 뒤 onStopped를 호출한다.
@@ -82,6 +102,7 @@ class AmbientLight(
         stopping = true
         handler.removeCallbacks(restoreOriginal)
         handler.removeCallbacksAndMessages(verifyToken)
+        fade.cancel()
         probe.cancel()
         cabin?.let { (area) ->
             sdkCall("ambient light listener unregister") {
@@ -97,7 +118,8 @@ class AmbientLight(
                     onStopped()
                 }
             }
-        val requested = setColor(null) { handler.post(finish) }
+        // SDK 연결을 해제하기 전에 끝나도록, 서서히 변경하지 않고 한 번에 원래 색으로 되돌린다.
+        val requested = setColor(null, gradually = false) { handler.post(finish) }
         if (requested) {
             handler.postDelayed(finish, stopToken, STOP_TIMEOUT_MILLIS)
         } else {
@@ -105,26 +127,20 @@ class AmbientLight(
         }
     }
 
-    private fun readOriginalColor(area: SeatArea) {
-        light.getAmbientLightBrightnessColor(
-            area = area,
-            onComplete = { color -> handler.post { rememberOriginal(area, color) } },
-            onFailed = { AppLog.w("ambient light color read failed", it) }
-        )
-    }
-
     private fun rememberOriginal(area: SeatArea, color: Int?) {
         if (stopping) return
         // SDK 문서에는 알파 값을 0xFF로 고정한다고 명시되어 있지만 에뮬레이터에서는 0이 반환되어서, 조회한 색의 알파 값을 0xFF로 설정한다.
         val current = color?.let { it or OPAQUE }
-        // 앱이 주황이나 초록을 켜 둔 채 종료됐다면 시작할 때 조회한 색이 원래 색이 아니므로, 지난번에 저장한 원래 색을 사용한다.
-        val original = if (current != null && !LightPlan.isOwnColor(current)) {
+        // 앱이 조명 색을 변경한 채로 종료됐을 수 있어서, 시작할 때 조회한 색이 lastChangeColors에 포함되면 그 색 대신
+        // 지난번에 저장한 원래 색을 사용한다.
+        val leftByApp =
+            current != null &&
+                savedColors.lastChangeColors().any { LightPlan.sameColor(it, current) }
+        val original = if (current != null && !leftByApp) {
             savedColors.edit { putInt(ORIGINAL_COLOR_KEY, current) }
             current
         } else {
-            savedColors.getInt(ORIGINAL_COLOR_KEY, 0).takeIf {
-                savedColors.contains(ORIGINAL_COLOR_KEY)
-            }
+            savedColors.savedColor(ORIGINAL_COLOR_KEY)
         }
         AppLog.i("ambient light original color ${hex(original)}, now ${hex(current)}")
         if (original != null) {
@@ -136,15 +152,15 @@ class AmbientLight(
                 light.registerAmbientLightBrightnessColorListener(area, colorListener)
             }
             // 원래 색을 조회하는 동안 상태가 바뀌었거나 지난번에 앱이 켠 색이 남아 있을 수 있어서, 조명 색을 지금 상태에 맞게 변경한다.
-            setColor(wantedColor)
+            setColor(wantedColor, gradually = true)
         }
     }
 
     // 켜져 있던 색(shownColor)이나 원래 색과 같은 알림은 바뀐 것이 없어서 무시한다.
-    // 색 변경을 요청한 직후의 알림이거나 앱의 색(주황, 연한 주황, 초록)이면 앱이 변경한 것이어서 무시한다.
+    // 색 변경을 요청한 직후의 알림이거나 밝기를 낮춘 앱의 색(주황, 연한 주황, 초록)이면 앱이 켠 것이어서 무시한다.
     // 그 밖의 색은 사용자가 변경한 색으로 판단해 다음에 되돌릴 원래 색으로 삼는다. 마지막으로 요청한 색과만
     // 비교하면, 사용자가 다른 색으로 변경했다가 앱이 요청했던 색으로 되돌린 경우를 놓친다.
-    // 앱이 색 변경을 요청한 직후에 사용자가 변경하거나 앱의 색과 똑같은 색을 고르면 알아채지 못한다.
+    // 앱이 요청한 직후에 사용자가 색을 변경하거나, 밝기를 낮춘 앱의 색과 똑같은 색을 고르면 알아채지 못한다.
     // 바쁜 상황 중에 사용자가 변경했어도 그 색을 바로 덮지 않고, 다음 상태 변화 때 앱의 색을 요청한다.
     private fun onColorChanged(color: Int) {
         val current = cabin ?: return
@@ -159,18 +175,38 @@ class AmbientLight(
         shownColor = color
     }
 
-    // color가 null이면 조명을 원래 색으로 되돌린다. 요청을 보냈으면 true를 반환한다.
-    // 응답을 수신하면 onAnswered를 호출한다.
-    private fun setColor(color: Int?, onAnswered: () -> Unit = {}): Boolean {
+    // color가 null이면 조명을 원래 색으로 되돌린다. gradually가 true면 FADE_MILLIS에 걸쳐 변경한다.
+    // 요청을 보냈으면 true를 반환한다. 한 번에 변경할 때는 요청의 응답을 수신하면 onAnswered를 호출한다.
+    private fun setColor(color: Int?, gradually: Boolean, onAnswered: () -> Unit = {}): Boolean {
         wantedColor = color
         val (area, originalColor) = cabin ?: return false
-        val next = color ?: originalColor
-        val unchanged = shownColor?.let { LightPlan.sameColor(it, next) } == true
-        if (!unchanged) request(area, next, attempt = 0, onAnswered = onAnswered)
+        // 앱의 색만 밝기를 낮추고, 사용자가 고른 원래 색은 그대로 되돌린다.
+        val level = if (isNight()) LightPlan.NIGHT_LEVEL else LightPlan.DAY_LEVEL
+        val next = color?.let { LightPlan.dimmed(it, level) } ?: originalColor
+        fade.cancel()
+        val from = shownColor
+        val unchanged = from != null && LightPlan.sameColor(from, next)
+        if (!unchanged) {
+            savedColors.saveChange(from ?: next, next)
+            if (gradually && from != null) {
+                fade.start(from, next) { step, last ->
+                    request(area, step, attempt = 0, verifyAfter = last)
+                }
+            } else {
+                request(area, next, attempt = 0, onAnswered = onAnswered)
+            }
+        }
         return !unchanged
     }
 
-    private fun request(area: SeatArea, color: Int, attempt: Int, onAnswered: () -> Unit = {}) {
+    // 서서히 변경하는 도중의 색(verifyAfter가 false)은 곧 다음 색으로 바뀌어서 다시 조회해 확인하지 않는다.
+    private fun request(
+        area: SeatArea,
+        color: Int,
+        attempt: Int,
+        verifyAfter: Boolean = true,
+        onAnswered: () -> Unit = {}
+    ) {
         shownColor = color
         handler.removeCallbacksAndMessages(verifyToken)
         val requestedAt = SystemClock.elapsedRealtime()
@@ -182,9 +218,11 @@ class AmbientLight(
             onComplete = { _, _ ->
                 AppLog.i("ambient light set ${hex(color)} answered after ${since(requestedAt)} ms")
                 onAnswered()
-                handler.postDelayed({
-                    verify(area, color, attempt)
-                }, verifyToken, VERIFY_DELAY_MILLIS)
+                if (verifyAfter) {
+                    handler.postDelayed({
+                        verify(area, color, attempt)
+                    }, verifyToken, VERIFY_DELAY_MILLIS)
+                }
             },
             onFailed = {
                 AppLog.w("ambient light set ${hex(color)} failed", it)
@@ -231,3 +269,19 @@ class AmbientLight(
 }
 
 private fun since(startedAt: Long) = SystemClock.elapsedRealtime() - startedAt
+
+private fun SharedPreferences.savedColor(key: String) = getInt(key, 0).takeIf { contains(key) }
+
+// 색을 변경하는 도중에 앱이 종료돼도 다음에 시작할 때 조명에 남은 색을 앱이 켠 색으로 판단하도록(rememberOriginal),
+// 요청하기 전에 출발 색과 도착 색을 저장한다. 파일 저장이 요청보다 늦어지지 않도록, apply 대신 commit을 사용한다.
+private fun SharedPreferences.saveChange(from: Int, to: Int) = edit(commit = true) {
+    putInt(CHANGE_FROM_KEY, from)
+    putInt(CHANGE_TO_KEY, to)
+}
+
+// 앱이 마지막으로 조명 색을 변경할 때 켜질 수 있었던 색이다. 서서히 변경했는지는 저장하지 않아서 중간색을 늘 포함한다.
+private fun SharedPreferences.lastChangeColors(): List<Int> {
+    val from = savedColor(CHANGE_FROM_KEY)
+    val to = savedColor(CHANGE_TO_KEY)
+    return if (from != null && to != null) fadePath(from, to) else emptyList()
+}

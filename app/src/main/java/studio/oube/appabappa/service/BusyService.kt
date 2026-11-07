@@ -23,6 +23,7 @@ import studio.oube.appabappa.light.AmbientLight
 import studio.oube.appabappa.sdkCall
 import studio.oube.appabappa.vehicle.CarSignals
 import studio.oube.appabappa.vehicle.DriverInputs
+import studio.oube.appabappa.vehicle.LowBeam
 import studio.oube.appabappa.vehicle.NaviGuidance
 import studio.oube.appabappa.vehicle.RouteGuidance
 import studio.oube.appabappa.vehicle.gearOf
@@ -45,6 +46,7 @@ class BusyService : Service() {
     private lateinit var driver: DriverInputs
     private lateinit var navi: NaviGuidance
     private lateinit var light: AmbientLight
+    private lateinit var lowBeam: LowBeam
 
     private val tick =
         object : Runnable {
@@ -63,7 +65,10 @@ class BusyService : Service() {
         driver = DriverInputs(vehicle).apply { start() }
         navi = NaviGuidance(applicationContext).apply { start() }
         val savedColors = getSharedPreferences(LIGHT_PREFERENCES, MODE_PRIVATE)
-        light = AmbientLight(vehicle.getLight(), handler, savedColors).apply { start() }
+        lowBeam = LowBeam(vehicle.getLight(), handler) { light.refresh() }
+        light = AmbientLight(vehicle.getLight(), handler, savedColors, isNight = { lowBeam.isOn })
+        light.start()
+        lowBeam.start()
         handler.post(tick)
         AppLog.i("busy service started")
     }
@@ -79,6 +84,7 @@ class BusyService : Service() {
         navi.stop()
         driver.stop()
         car.stop()
+        lowBeam.stop()
         // 원래 색으로 되돌리는 요청이 끝나기 전에 Vehicle 연결을 해제하면 주황이 남을 수 있어서, 그 응답을 수신한 뒤에 해제한다.
         light.stop { sdkCall("vehicle release") { vehicle.release() } }
         AppLog.i("busy service stopped")
