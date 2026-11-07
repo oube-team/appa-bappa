@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- 앱 아이콘이 확정될 때까지 Android 기본 아이콘을 사용한다. -->
     <application
@@ -47,5 +48,14 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="주행 중 차량 신호로 운전자가 바쁜 상황인지 판단해 실내 조명 색을 변경한다" />
         </service>
+        <!-- 다른 앱이 이 수신기로 알림을 보내 서비스를 시작하지 못하도록 공개하지 않는다. 시스템이 보내는 알림은 공개하지 않아도 수신된다(2026-11-07 에뮬레이터). -->
+        <receiver
+            android:name=".service.AutoStartReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
