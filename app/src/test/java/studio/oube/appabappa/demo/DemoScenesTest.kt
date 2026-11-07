@@ -68,7 +68,7 @@ class DemoScenesTest {
         val run = DemoRun(requireNotNull(DemoScenes.find(id)), startMillis = 0)
         val states =
             generateSequence(0L) { it + TICK_MILLIS }
-                .map { run.update(Gear.PARK, it) }
+                .map { run.update(Gear.PARK, it)?.state }
                 .takeWhile { it != null }
                 .filterNotNull()
                 .toList()

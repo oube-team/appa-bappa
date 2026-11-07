@@ -9,14 +9,18 @@ private const val KMH_PER_MPS = 3.6
 class Ride {
     private val engine = BusyEngine()
     private val visitedStates = mutableListOf<BusyState>()
+    private val visitedStatuses = mutableListOf<BusyStatus>()
     private var nowMillis = 0L
 
+    // 상태나 판단 결과가 바뀔 때만 기록한다.
     val states: List<BusyState> get() = visitedStates
+    val statuses: List<BusyStatus> get() = visitedStatuses
 
     fun drive(seconds: Double, signals: (elapsedSeconds: Double) -> VehicleSignals) {
         repeat((seconds / TICK_SECONDS).roundToInt()) { tick ->
-            val state = engine.update(signals(tick * TICK_SECONDS), nowMillis)
-            if (visitedStates.lastOrNull() != state) visitedStates += state
+            val status = engine.update(signals(tick * TICK_SECONDS), nowMillis)
+            if (visitedStates.lastOrNull() != status.state) visitedStates += status.state
+            if (visitedStatuses.lastOrNull() != status) visitedStatuses += status
             nowMillis += TICK_MILLIS
         }
     }

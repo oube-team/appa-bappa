@@ -1,7 +1,7 @@
 package studio.oube.appabappa.demo
 
 import studio.oube.appabappa.engine.BusyEngine
-import studio.oube.appabappa.engine.BusyState
+import studio.oube.appabappa.engine.BusyStatus
 import studio.oube.appabappa.engine.Gear
 
 private const val MILLIS_PER_SECOND = 1_000.0
@@ -12,7 +12,7 @@ class DemoRun(val scene: DemoScene, private val startMillis: Long) {
 
     // 주행 중에 시연 장면으로 조명 색이 바뀌지 않도록 실제 기어가 P일 때만 재생한다.
     // 실제 기어가 P가 아니거나 장면이 끝나면 null을 반환한다.
-    fun update(realGear: Gear, nowMillis: Long): BusyState? {
+    fun update(realGear: Gear, nowMillis: Long): BusyStatus? {
         if (realGear != Gear.PARK) return null
         val elapsedMillis = nowMillis - startMillis
         return scene.signalsAt(elapsedMillis / MILLIS_PER_SECOND)

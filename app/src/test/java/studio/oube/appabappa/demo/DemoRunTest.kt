@@ -21,7 +21,7 @@ class DemoRunTest {
     fun `장면이 끝나면 null을 반환한다`() {
         val run = DemoRun(reversing, startMillis = 0)
 
-        assertEquals(BusyState.BUSY, run.update(Gear.PARK, 750))
+        assertEquals(BusyState.BUSY, run.update(Gear.PARK, 750)?.state)
         assertNull(run.update(Gear.PARK, 1_000))
     }
 }

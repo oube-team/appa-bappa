@@ -14,6 +14,7 @@ import studio.oube.appabappa.demo.DemoRun
 import studio.oube.appabappa.demo.DemoScenes
 import studio.oube.appabappa.engine.BusyEngine
 import studio.oube.appabappa.engine.BusyState
+import studio.oube.appabappa.engine.BusyStatus
 import studio.oube.appabappa.engine.Gear
 import studio.oube.appabappa.engine.Maneuver
 import studio.oube.appabappa.engine.RouteProgress
@@ -35,7 +36,7 @@ class BusyService : Service() {
     private val engine = BusyEngine()
     private val routeProgress = RouteProgress()
     private var trackedGuidance: RouteGuidance? = null
-    private var state = BusyState.FREE
+    private var status = BusyStatus(BusyState.FREE)
     private var demo: DemoRun? = null
     private var requestedDemoScene: String? = null
 
@@ -110,14 +111,15 @@ class BusyService : Service() {
                 steeringAngleDeg = driver.steeringAngleDeg,
                 nextManeuver = nextManeuver(speedMps, now)
             )
-        val realState = engine.update(signals, now)
+        val realStatus = engine.update(signals, now)
         startRequestedDemo(signals.gear, now)
-        val next = demoState(signals.gear, now) ?: realState
-        if (next != state) {
+        val next = demoStatus(signals.gear, now) ?: realStatus
+        if (next != status) {
             val source = demo?.let { "demo ${it.scene.id}" } ?: signals.toString()
-            AppLog.i("state $state -> $next, $source")
-            light.show(previous = state, next = next)
-            state = next
+            AppLog.i("state ${status.describe()} -> ${next.describe()}, $source")
+            // 조명 색은 상태로만 정하므로, 같은 상태 안에서 이유만 바뀌면 조명을 변경하지 않는다.
+            if (next.state != status.state) light.show(previous = status.state, next = next.state)
+            status = next
         }
     }
 
@@ -154,7 +156,7 @@ class BusyService : Service() {
         }
     }
 
-    private fun demoState(gear: Gear, now: Long): BusyState? {
+    private fun demoStatus(gear: Gear, now: Long): BusyStatus? {
         val run = demo ?: return null
         val next = run.update(gear, now)
         if (next == null) {
@@ -172,3 +174,5 @@ class BusyService : Service() {
         const val EXTRA_DEMO_SCENE = "demo"
     }
 }
+
+private fun BusyStatus.describe() = listOfNotNull(state, cause, turnTypeName).joinToString(" ")
