@@ -3,6 +3,8 @@ package studio.oube.appabappa.engine
 // 엔진이 상태를 정한 근거로, 판단 규칙의 근거와 하나씩 대응한다. 화면에서 바쁜 이유를 알릴 때 사용한다.
 enum class BusyCause {
     // VERY_BUSY 근거
+    FORWARD_COLLISION_WARNING,
+    BLIND_SPOT_WARNING,
     HARD_BRAKING,
     FAST_SIGNALING,
 

@@ -3,15 +3,18 @@ package studio.oube.appabappa.engine
 import kotlin.math.abs
 
 internal class BusyCriteria(private val config: BusyConfig) {
-    // VERY_BUSY 근거를 반환한다. 두 근거가 함께 참이면 더 갑작스러운 상황인 급제동을 고른다.
-    fun veryBusyCause(signals: VehicleSignals, hardBraking: Boolean): BusyCause? = when {
-        hardBraking -> BusyCause.HARD_BRAKING
+    // VERY_BUSY 근거를 반환한다. 급제동은 차가 위험을 직접 알린 뒤에 이어지는 경우가 많아서(판단),
+    // 여러 근거가 함께 참이면 경고를 먼저 고른다. 그다음으로는 고속 주행 중 방향지시등보다 더 갑작스러운
+    // 상황인 급제동을 고른다.
+    fun veryBusyCause(signals: VehicleSignals, hardBraking: Boolean): BusyCause? =
+        signals.safetyWarning?.let { warningCause(it) } ?: when {
+            hardBraking -> BusyCause.HARD_BRAKING
 
-        signals.turnSignal != TurnSignal.OFF && signals.speedKmh >= config.highSpeedKmh ->
-            BusyCause.FAST_SIGNALING
+            signals.turnSignal != TurnSignal.OFF && signals.speedKmh >= config.highSpeedKmh ->
+                BusyCause.FAST_SIGNALING
 
-        else -> null
-    }
+            else -> null
+        }
 
     // BUSY 근거를 반환한다. 여러 근거가 함께 참이면 무엇을 하는 중인지 더 분명히 알려 주는 근거를 고른다.
     // 같은 회전에서는 방향지시등 근거와 스티어링 휠 근거가 함께 참이 되므로, 안내 지점을 지나는 중이면 안내를 먼저 고른다.
@@ -36,6 +39,12 @@ internal class BusyCriteria(private val config: BusyConfig) {
             it.distanceMeters <= config.passingMeters ||
                 secondsTo(it, signals) <= config.soonSeconds
         }
+    }
+
+    // SafetyWarning에 종류를 추가했을 때 근거를 빠뜨리면 컴파일되지 않도록, else 없이 모든 값을 나열한다.
+    private fun warningCause(warning: SafetyWarning) = when (warning) {
+        SafetyWarning.FORWARD_COLLISION -> BusyCause.FORWARD_COLLISION_WARNING
+        SafetyWarning.BLIND_SPOT -> BusyCause.BLIND_SPOT_WARNING
     }
 
     private fun isMoving(signals: VehicleSignals) = signals.speedKmh > config.movingSpeedKmh

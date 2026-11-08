@@ -5,6 +5,7 @@ package studio.oube.appabappa.demo
 
 import studio.oube.appabappa.engine.Gear
 import studio.oube.appabappa.engine.Maneuver
+import studio.oube.appabappa.engine.SafetyWarning
 import studio.oube.appabappa.engine.TurnSignal
 
 internal object DemoScenes {
@@ -14,6 +15,8 @@ internal object DemoScenes {
             leftTurn,
             redLight,
             hardBrake,
+            forwardCollision,
+            blindSpot,
             stopAndGo,
             shortSignal,
             parking,
@@ -76,6 +79,33 @@ private val hardBrake =
             DemoStep(3.0, driving(50.0)),
             DemoStep(1.0) { t -> driving(50 - 15 * t) },
             DemoStep(15.0, driving(35.0))
+        )
+    )
+
+// 전방 충돌 경고: 60 km/h로 달리다가 경고가 켜지면 VERY_BUSY가 되고, 2초 뒤에 꺼지면 RECOVERING을 거쳐 FREE로
+// 돌아온다.
+private val forwardCollision =
+    DemoScene(
+        "forward_collision",
+        listOf(
+            DemoStep(3.0, driving(60.0)),
+            DemoStep(2.0, driving(60.0).copy(safetyWarning = SafetyWarning.FORWARD_COLLISION)),
+            DemoStep(12.0, driving(60.0))
+        )
+    )
+
+// 후측방 경고: 50 km/h에서 오른쪽 방향지시등을 켜면 BUSY가 된다. 그 상태로 경고가 켜지면 VERY_BUSY가 된다.
+// 3초 뒤 차로를 바꾸지 않은 채 경고와 방향지시등이 함께 꺼지면 RECOVERING을 거쳐 FREE로 돌아온다.
+private val blindSpot =
+    DemoScene(
+        "blind_spot",
+        listOf(
+            DemoStep(2.0, driving(50.0, TurnSignal.RIGHT)),
+            DemoStep(
+                3.0,
+                driving(50.0, TurnSignal.RIGHT).copy(safetyWarning = SafetyWarning.BLIND_SPOT)
+            ),
+            DemoStep(13.0, driving(50.0))
         )
     )
 

@@ -34,6 +34,16 @@ class DemoScenesTest {
     }
 
     @Test
+    fun `전방 충돌 경고 장면은 FREE, VERY_BUSY, RECOVERING, FREE 순서로 바뀐다`() {
+        assertEquals(listOf(FREE, VERY_BUSY, RECOVERING, FREE), statesOf("forward_collision"))
+    }
+
+    @Test
+    fun `후측방 경고 장면은 방향지시등으로 BUSY가 된 뒤 VERY_BUSY, RECOVERING, FREE 순서로 바뀐다`() {
+        assertEquals(listOf(BUSY, VERY_BUSY, RECOVERING, FREE), statesOf("blind_spot"))
+    }
+
+    @Test
     fun `정체 장면은 FREE를 유지한다`() {
         assertEquals(listOf(FREE), statesOf("stop_and_go"))
     }
