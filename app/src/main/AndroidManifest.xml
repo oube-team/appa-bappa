@@ -17,12 +17,11 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- 앱 아이콘이 확정될 때까지 Android 기본 아이콘을 사용한다. -->
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@android:drawable/sym_def_app_icon"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         <!-- 필수 조작을 모두 터치로 할 수 있어서, CCP(로터리 컨트롤러)를 지원하지 않는다고 선언한다(Pleos CCP 개발 가이드). -->

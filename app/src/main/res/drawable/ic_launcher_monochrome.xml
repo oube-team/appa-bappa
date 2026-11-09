@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 테마 아이콘을 표시하는 런처는 이 레이어를 한 가지 색으로 칠하므로, 표시등 판을 제외하고 글자만 앞 레이어의 켜진 점과 같은 자리에 그린다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="216"
+    android:viewportHeight="216">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M61.75,86.75h5v42.5h-5zM76.75,86.75h5v42.5h-5zM66.75,104.25h10v5h-10zM66.75,124.25h10v5h-10zM86.75,84.25h5v47.5h-5zM91.75,104.25h5v5h-5zM104.25,86.75h5v42.5h-5zM114.25,86.75h5v42.5h-5zM109.25,104.25h5v5h-5zM109.25,124.25h5v5h-5zM124.25,86.75h5v42.5h-5zM134.25,86.75h5v42.5h-5zM129.25,104.25h5v5h-5zM129.25,124.25h5v5h-5zM144.25,84.25h5v47.5h-5zM149.25,104.25h5v5h-5z" />
+</vector>

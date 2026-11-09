@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 에뮬레이터에서 76dp로 표시될 때도 검은 표시등 판이 바탕과 구분되도록, 앱 목록의 내비게이션 아이콘과 같은 바탕색을 사용한다. -->
+    <color name="ic_launcher_background">#333333</color>
+</resources>

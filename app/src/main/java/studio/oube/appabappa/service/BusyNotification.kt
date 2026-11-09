@@ -19,7 +19,7 @@ internal object BusyNotification {
             )
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         return Notification.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_stat_appa_bappa)
             .setContentTitle(context.getString(R.string.app_name))
             .setContentText(context.getString(R.string.notification_text))
             .setOngoing(true)
