@@ -14,6 +14,9 @@ internal class CopyStyle(val title: TextStyle, val reason: TextStyle, val sub: T
 @Immutable
 internal class CopyBox(val left: Dp, val top: Dp, val width: Dp, val style: CopyStyle, val gap: Dp)
 
+// 방향지시등을 켜면 시스템이 창의 왼쪽 위에 표시하는 후측방 카메라 화면의 높이다(2026-11-10 에뮬레이터에서 측정).
+private val BlindSpotCameraHeight = 424.dp
+
 // 앱 영역은 Pleos 디스플레이 가이드의 Connect-S 규격(세로 창 840 x 1184, 가로 창 1700 x 1184)이다.
 // 요소의 자리는 이 크기에서 정했고, 좌우 여백은 Pleos Page Navigation처럼 창 너비와 관계없이 40이다. 창의 오른쪽에
 // 놓는 카드는 창 너비가 규격과 달라도 오른쪽 여백이 유지되도록 오른쪽 끝에서 측정한 거리(End)로 놓는다.
@@ -24,11 +27,12 @@ internal class AppLayout(val wide: Boolean) {
     // 가로 창에서 시연 목록을 두 열로 나눌 때 열 사이의 간격이다.
     val columnGap: Dp = 48.dp
 
-    // 지금 상태 화면의 문구는 Headline Large(60/80)로 크게 보여 준다.
+    // 지금 상태 화면의 문구를 Headline Large(60/80)로 크게 보여 준다. 방향지시등을 켠 동안 후측방 카메라 화면이 가리지
+    // 않도록, 문구를 그 화면 아래로 좌우 여백만큼 띄워 놓는다.
     val statusCopy: CopyBox =
         CopyBox(
             left = padX,
-            top = if (wide) 360.dp else 300.dp,
+            top = BlindSpotCameraHeight + padX,
             width = if (wide) 1100.dp else 760.dp,
             style = CopyStyle(
                 title = PleosType.headlineLarge.extraStrong,
