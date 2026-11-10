@@ -34,7 +34,7 @@ internal val SceneTexts: Map<String, SceneText> =
         "left_turn" to SceneText(
             "교차로 좌회전",
             listOf(
-                0.0 to "왼쪽 방향지시등을 켜고 신호를 기다려요.\n멈춰 있어서 바쁘지 않아요",
+                0.0 to "왼쪽 방향지시등을 켜고 신호를 기다려요.\n정차 중이라 바쁘지 않아요",
                 5.0 to "출발해서 스티어링 휠을 180도 돌려 좌회전해요",
                 9.0 to "회전을 마쳤어요. 다시 바빠질 수 있어서\n5초 동안 주황을 유지해요",
                 14.0 to "바쁜 상황이 끝났어요"
@@ -42,13 +42,13 @@ internal val SceneTexts: Map<String, SceneText> =
         ),
         "red_light" to SceneText(
             "신호 대기",
-            listOf(0.0 to "좌회전 지점 30m 앞에서 신호를 기다려요.\n멈춰 있어서 바쁘지 않아요")
+            listOf(0.0 to "좌회전 지점 30m 앞에서 신호를 기다려요.\n정차 중이라 바쁘지 않아요")
         ),
         "hard_brake" to SceneText(
             "급제동",
             listOf(
                 0.0 to "시속 50km로 달리고 있어요",
-                3.0 to "앞차가 갑자기 속도를 줄여서\n1초 만에 시속 35km로 급하게 감속해요",
+                3.0 to "앞차가 갑자기 감속해서\n1초 만에 시속 35km로 급제동해요",
                 4.25 to "다시 바빠질 수 있어서 10초 동안 주황을 유지해요",
                 14.25 to "바쁜 상황이 끝났어요"
             )
@@ -67,7 +67,7 @@ internal val SceneTexts: Map<String, SceneText> =
             listOf(
                 0.0 to "시속 50km로 달리며 오른쪽 방향지시등을 켰어요",
                 2.0 to "오른쪽 뒤에 차가 있어서 후측방 경고가 켜졌어요",
-                5.0 to "차로를 바꾸지 않고 방향지시등을 껐어요.\n다시 바빠질 수 있어서 10초 동안 주황을 유지해요",
+                5.0 to "차로를 변경하지 않고 방향지시등을 껐어요.\n다시 바빠질 수 있어서 10초 동안 주황을 유지해요",
                 15.0 to "바쁜 상황이 끝났어요"
             )
         ),
@@ -88,7 +88,7 @@ internal val SceneTexts: Map<String, SceneText> =
             "주차",
             listOf(
                 0.0 to "후진 기어(R)로 주차하고 있어요",
-                3.0 to "주차 기어(P)로 바꿔서\n바쁜 상황이 바로 끝났어요"
+                3.0 to "주차 기어(P)로 변경해서\n바쁜 상황이 바로 끝났어요"
             )
         ),
         "back_to_back" to SceneText(

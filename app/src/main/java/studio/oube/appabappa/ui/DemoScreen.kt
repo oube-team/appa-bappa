@@ -41,6 +41,7 @@ internal fun DemoScreen(
     progress: DemoProgress?,
     mood: Mood,
     reason: Reason?,
+    approaching: Boolean,
     who: String,
     lightEnabled: Boolean,
     layout: AppLayout,
@@ -70,7 +71,7 @@ internal fun DemoScreen(
             progress?.let { ReadoutGrid(readouts(it.signals, it.engineState.name)) }
             DemoProgressBar(elapsed, duration)
         }
-        StatusCopyBlock(statusCopy(mood, reason, who, lightEnabled), layout.demoCopy)
+        StatusCopyBlock(statusCopy(mood, reason, approaching, who, lightEnabled), layout.demoCopy)
     }
 }
 

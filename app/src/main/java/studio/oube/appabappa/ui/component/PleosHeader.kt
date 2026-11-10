@@ -74,7 +74,7 @@ fun DepthHeader(title: String, onBack: () -> Unit, modifier: Modifier = Modifier
     }
 }
 
-// Pleos 아이콘 버튼(80 x 80, 모서리 20)이다. 누르는 동안만 button/basic/pressed 바탕을 보여 준다.
+// Pleos 아이콘 버튼(80 x 80, 모서리 20)이다. 누르는 동안에는 95%로 축소하고 button/basic/pressed 바탕을 보여 준다.
 @Composable
 private fun BackButton(onBack: () -> Unit) {
     val colors = Pleos.colors
@@ -84,11 +84,12 @@ private fun BackButton(onBack: () -> Unit) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(80.dp)
+            .clickable(interaction, indication = null, role = Role.Button, onClick = onBack)
+            .pressShrink(pressed)
             .background(
                 if (pressed) colors.button.basic.pressed else Color.Transparent,
                 RoundedCornerShape(20.dp)
             )
-            .clickable(interaction, indication = null, role = Role.Button, onClick = onBack)
     ) {
         Image(
             painter = rememberVectorPainter(ArrowBack),

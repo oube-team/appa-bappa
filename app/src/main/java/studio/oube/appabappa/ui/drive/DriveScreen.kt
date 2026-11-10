@@ -96,6 +96,7 @@ internal fun DriveScreen(
                         layout,
                         monitor.mood,
                         monitor.reason,
+                        monitor.approaching,
                         settings.who,
                         settings.lightEnabled
                     )

@@ -31,6 +31,6 @@ class DemoTextsTest {
         val text = requireNotNull(SceneTexts["parking"])
 
         assertEquals("후진 기어(R)로 주차하고 있어요", text.captionAt(2.9))
-        assertEquals("주차 기어(P)로 바꿔서\n바쁜 상황이 바로 끝났어요", text.captionAt(3.0))
+        assertEquals("주차 기어(P)로 변경해서\n바쁜 상황이 바로 끝났어요", text.captionAt(3.0))
     }
 }

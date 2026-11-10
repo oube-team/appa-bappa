@@ -10,6 +10,6 @@ if ! printf '%s\n' "$first_line" | grep -Eq '^(feature|fix|chore)(\([a-z]+\))?: 
     echo "커밋 메시지 첫 줄을 \"type(scope): 설명\" 형식으로 작성해 주세요." >&2
     echo "type: feature, fix, chore" >&2
     echo "scope: 생략 가능" >&2
-    echo "예: feature(engine): 방향지시등으로 바쁨 판단" >&2
+    echo "예: feature(engine): 방향지시등으로 바쁜 상황 판단" >&2
     exit 1
 fi

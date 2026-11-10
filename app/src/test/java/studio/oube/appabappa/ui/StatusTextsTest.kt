@@ -20,7 +20,7 @@ class StatusTextsTest {
 
     @Test
     fun `BUSY 문구는 호칭과 바쁜 이유를 함께 보여 준다`() {
-        val copy = statusCopy(Mood.BUSY, Reason.MERGE, "엄마", lightEnabled = true)
+        val copy = copyOf(Mood.BUSY, Reason.MERGE, who = "엄마")
 
         assertEquals(listOf("엄마가 운전에", "집중하고 있어요"), copy.title)
         assertEquals("합류나 분기 지점을 지나고 있어요", copy.reason)
@@ -28,32 +28,59 @@ class StatusTextsTest {
 
     @Test
     fun `SOON과 RECOVERING 문구는 그 상태에 맞는 바쁜 이유를 보여 준다`() {
-        val soon = statusCopy(Mood.SOON, Reason.LEFT_TURN, "아빠", lightEnabled = true)
+        val soon = copyOf(Mood.SOON, Reason.LEFT_TURN)
         assertEquals(listOf("아빠가 곧 운전에", "집중해야 해요"), soon.title)
         assertEquals("좌회전할 지점이 가까워요", soon.reason)
 
-        val recovering = statusCopy(Mood.RECOVERING, Reason.LEFT_TURN, "아빠", lightEnabled = true)
+        val recovering = copyOf(Mood.RECOVERING, Reason.LEFT_TURN)
         assertEquals("방금 좌회전했어요", recovering.reason)
 
-        val passed = statusCopy(Mood.RECOVERING, Reason.PASSED_LEFT_TURN, "아빠", lightEnabled = true)
+        val passed = copyOf(Mood.RECOVERING, Reason.PASSED_LEFT_TURN)
         assertEquals("방금 좌회전할 지점을 지났어요", passed.reason)
     }
 
     @Test
+    fun `BUSY에서 안내 지점에 닿기 전이면 SOON 문장으로 알린다`() {
+        val left = copyOf(Mood.BUSY, Reason.LEFT_TURN, approaching = true)
+        assertEquals(listOf("아빠가 운전에", "집중하고 있어요"), left.title)
+        assertEquals("좌회전할 지점이 가까워요", left.reason)
+        assertEquals("끝나면 초록으로 알려 드릴게요", left.sub)
+
+        val merge = copyOf(Mood.BUSY, Reason.MERGE, approaching = true)
+        assertEquals("합류나 분기 지점이 가까워요", merge.reason)
+    }
+
+    @Test
+    fun `SOON 문장이 없는 이유는 BUSY 문장으로 알린다`() {
+        val copy = copyOf(Mood.BUSY, Reason.TURN_SIGNAL, approaching = true)
+
+        assertEquals("방향지시등을 켜고 있어요", copy.reason)
+    }
+
+    @Test
+    fun `SOON과 RECOVERING 문구는 안내 지점에 닿기 전인지와 관계없이 그 상태의 문장을 보여 준다`() {
+        val soon = copyOf(Mood.SOON, Reason.LEFT_TURN, approaching = true)
+        assertEquals("좌회전할 지점이 가까워요", soon.reason)
+
+        val recovering = copyOf(Mood.RECOVERING, Reason.LEFT_TURN, approaching = true)
+        assertEquals("방금 좌회전했어요", recovering.reason)
+    }
+
+    @Test
     fun `FREE와 THANKS 문구에는 바쁜 이유가 없다`() {
-        assertEquals(null, statusCopy(Mood.FREE, Reason.MERGE, "아빠", lightEnabled = true).reason)
-        assertEquals(null, statusCopy(Mood.THANKS, Reason.MERGE, "아빠", lightEnabled = true).reason)
+        assertEquals(null, copyOf(Mood.FREE, Reason.MERGE).reason)
+        assertEquals(null, copyOf(Mood.THANKS, Reason.MERGE).reason)
     }
 
     @Test
     fun `실내 조명으로 알리기를 끄면 FREE 문구는 화면으로 알린다고 안내한다`() {
         assertEquals(
             "운전에 집중해야 할 때는 조명 색으로 알려 드려요",
-            statusCopy(Mood.FREE, null, "아빠", lightEnabled = true).sub
+            copyOf(Mood.FREE, null).sub
         )
         assertEquals(
             "운전에 집중해야 할 때는 화면으로 알려 드려요",
-            statusCopy(Mood.FREE, null, "아빠", lightEnabled = false).sub
+            copyOf(Mood.FREE, null, lightEnabled = false).sub
         )
     }
 
@@ -65,4 +92,12 @@ class StatusTextsTest {
             assertNotNull(turnType, reason?.lines()?.soon)
         }
     }
+
+    private fun copyOf(
+        mood: Mood,
+        reason: Reason?,
+        approaching: Boolean = false,
+        who: String = "아빠",
+        lightEnabled: Boolean = true
+    ) = statusCopy(mood, reason, approaching, who, lightEnabled)
 }

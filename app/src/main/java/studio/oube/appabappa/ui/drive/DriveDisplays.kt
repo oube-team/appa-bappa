@@ -119,6 +119,7 @@ internal fun PassengerDisplay(
     layout: DriveLayout,
     mood: Mood,
     reason: Reason?,
+    approaching: Boolean,
     who: String,
     lightEnabled: Boolean
 ) {
@@ -136,7 +137,7 @@ internal fun PassengerDisplay(
     ) {
         Box(Modifier.fillMaxSize().clip(RoundedCornerShape(18.dp)).background(colors.background)) {
             EdgeLight(mood, scale = layout.displayGlowScale)
-            val copy = statusCopy(mood, reason, who, lightEnabled)
+            val copy = statusCopy(mood, reason, approaching, who, lightEnabled)
             val (padX, padY) = layout.displayPadding
             Column(
                 verticalArrangement = Arrangement.spacedBy(layout.displayGap),

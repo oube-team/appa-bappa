@@ -9,6 +9,9 @@ import studio.oube.appabappa.engine.BusyState.RECOVERING
 import studio.oube.appabappa.engine.BusyState.SOON
 import studio.oube.appabappa.engine.BusyState.VERY_BUSY
 import studio.oube.appabappa.engine.Gear
+import studio.oube.appabappa.status.MoodTracker
+import studio.oube.appabappa.status.Reason
+import studio.oube.appabappa.ui.statusCopy
 
 private const val TICK_MILLIS = 250L
 
@@ -78,6 +81,41 @@ class DemoScenesTest {
     }
 
     @Test
+    fun `고속도로 합류 장면은 지점이 가깝다고, 지나고 있다고, 방금 지났다고 차례로 알린다`() {
+        assertEquals(
+            listOf(
+                null,
+                "합류나 분기 지점이 가까워요",
+                "합류나 분기 지점을 지나고 있어요",
+                "방금 합류나 분기 지점을 지났어요",
+                null
+            ),
+            reasonsOf("highway_merge", TICK_MILLIS)
+        )
+    }
+
+    @Test
+    fun `교차로 좌회전 장면은 좌회전하고 있다고, 방금 좌회전했다고 차례로 알린다`() {
+        assertEquals(
+            listOf(null, "좌회전하고 있어요", "방금 좌회전했어요", null),
+            reasonsOf("left_turn", TICK_MILLIS)
+        )
+    }
+
+    // 서비스는 0.25초마다 판단하지만 실제 기기에서는 간격이 조금씩 길어진다. 고속도로 합류 장면은 합류 지점을 지나 정확히
+    // 50m(엔진이 지나온 안내로 알리는 거리) 달린 때에 방향지시등을 끄므로, 간격이 길어지면 그 판단에서 50m를 넘는다.
+    @Test
+    fun `판단 간격이 조금 길어져도 장면마다 알리는 이유는 같다`() {
+        for (scene in DemoScenes.all) {
+            val expected = reasonsOf(scene.id, TICK_MILLIS)
+            for (tickMillis in listOf(251L, 257L, 263L, 290L)) {
+                val reasons = reasonsOf(scene.id, tickMillis)
+                assertEquals("${scene.id} ${tickMillis}ms", expected, reasons)
+            }
+        }
+    }
+
+    @Test
     fun `장면 이름은 서로 중복되지 않는다`() {
         val ids = DemoScenes.all.map { it.id }
 
@@ -94,5 +132,25 @@ class DemoScenesTest {
                 .filterNotNull()
                 .toList()
         return states.filterIndexed { i, state -> i == 0 || states[i - 1] != state }
+    }
+
+    // 장면을 tickMillis 간격으로 끝까지 재생하며, 동승자 화면에 표시되는 바쁜 이유가 바뀔 때만 그 문장을 기록한다.
+    // 이유가 없으면 null을 기록한다.
+    private fun reasonsOf(id: String, tickMillis: Long): List<String?> {
+        val run = DemoRun(requireNotNull(DemoScenes.find(id)), startMillis = 0)
+        val moods = MoodTracker()
+        val reasons =
+            generateSequence(0L) { it + tickMillis }
+                .map { now -> run.update(Gear.PARK, now)?.let { status -> status to now } }
+                .takeWhile { it != null }
+                .filterNotNull()
+                .map { (status, now) ->
+                    val mood = moods.update(status.state, now)
+                    val reason = Reason.of(status)
+                    val approaching = Reason.isApproaching(status)
+                    statusCopy(mood, reason, approaching, "아빠", lightEnabled = true).reason
+                }
+                .toList()
+        return reasons.filterIndexed { i, reason -> i == 0 || reasons[i - 1] != reason }
     }
 }

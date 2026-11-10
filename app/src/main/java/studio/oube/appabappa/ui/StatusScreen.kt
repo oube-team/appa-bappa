@@ -47,6 +47,7 @@ enum class Notice(val title: List<String>, val body: String) {
 internal fun StatusScreen(
     mood: Mood,
     reason: Reason?,
+    approaching: Boolean,
     who: String,
     lightEnabled: Boolean,
     parked: Boolean,
@@ -68,7 +69,8 @@ internal fun StatusScreen(
             }
         }
         if (notice == null || mood != Mood.FREE) {
-            StatusCopyBlock(statusCopy(mood, reason, who, lightEnabled), layout.statusCopy)
+            val copy = statusCopy(mood, reason, approaching, who, lightEnabled)
+            StatusCopyBlock(copy, layout.statusCopy)
         } else {
             NoticeBlock(notice, layout, onAskSpeed.takeIf { parked })
         }

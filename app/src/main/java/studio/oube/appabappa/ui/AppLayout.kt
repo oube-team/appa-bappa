@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import studio.oube.appabappa.ui.component.HeaderHeight
 import studio.oube.appabappa.ui.theme.PleosType
 
 @Immutable
@@ -19,6 +20,9 @@ internal class CopyBox(val left: Dp, val top: Dp, val width: Dp, val style: Copy
 @Immutable
 internal class AppLayout(val wide: Boolean) {
     val padX: Dp = 40.dp
+
+    // 가로 창에서 시연 목록을 두 열로 나눌 때 열 사이의 간격이다.
+    val columnGap: Dp = 48.dp
 
     // 지금 상태 화면의 문구는 Headline Large(60/80)로 크게 보여 준다.
     val statusCopy: CopyBox =
@@ -38,7 +42,7 @@ internal class AppLayout(val wide: Boolean) {
     val demoCopy: CopyBox =
         CopyBox(
             left = padX,
-            top = if (wide) 300.dp else 760.dp,
+            top = if (wide) 300.dp else 768.dp,
             width = if (wide) 820.dp else 760.dp,
             style = CopyStyle(
                 title = PleosType.headlineSmall.extraStrong,
@@ -48,10 +52,11 @@ internal class AppLayout(val wide: Boolean) {
             gap = 20.dp
         )
 
-    // 시연 재생 화면의 설명과 신호 표 카드다. demoCaptionHeight는 설명의 줄 수가 바뀌어도 표가 움직이지 않도록 고정한
-    // 높이다.
-    val demoPanelEnd: Dp = if (wide) padX else 24.dp
-    val demoPanelTop: Dp = 160.dp
+    // 시연 재생 화면의 설명과 신호 표 카드다. 카드의 오른쪽 끝이 시연 중 띠의 버튼과 맞도록 창의 오른쪽 끝에서 24(띠의
+    // 오른쪽 여백)만큼 띄우고, 띠와도 같은 간격을 둔다. demoCaptionHeight는 설명의 줄 수가 바뀌어도 표가 움직이지 않도록
+    // 고정한 높이다.
+    val demoPanelEnd: Dp = 24.dp
+    val demoPanelTop: Dp = HeaderHeight + demoPanelEnd
     val demoPanelWidth: Dp = if (wide) 640.dp else 792.dp
     val demoCaptionHeight: Dp = if (wide) 120.dp else 80.dp
 
@@ -71,6 +76,5 @@ internal class AppLayout(val wide: Boolean) {
 
     // 권한 안내 제목과 앱 머리 사이 간격이다.
     val permissionTitleGap: Dp = if (wide) 34.dp else 58.dp
-    val permissionListWidth: Dp = if (wide) 1100.dp else 760.dp
     val permissionButtonWidth: Dp = if (wide) 400.dp else 760.dp
 }

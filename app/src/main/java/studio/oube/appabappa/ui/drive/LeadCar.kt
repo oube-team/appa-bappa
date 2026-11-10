@@ -148,6 +148,8 @@ internal fun DrawScope.drawLeadCar(lead: LeadShape, paint: LeadCarPaint) {
 // 세로 창에서 확인), 표지판이 판단 카드에 3분의 1 넘게 들어가면 감춘다.
 private const val SIGN_HIDDEN_COVERED = 1 / 3f
 
+// 표지판 안의 화살표는 앞유리 안내 표시(DriveIcons의 MergeIcon, LeftTurnIcon)와 같은 Lucide 모양을 표지판의 원 안에
+// 들어가도록 줄인 것이다.
 private val MergeArrow = svgPath("M16 8H8v8 M16 16 8 8")
 private val LeftArrow = svgPath("M10 14 6 10 10 6 M18 18v-5a3 3 0 0 0-3-3H6")
 private val SignHalo = Path().apply { addOval(Rect(Offset(12f, 12f), 15f)) }

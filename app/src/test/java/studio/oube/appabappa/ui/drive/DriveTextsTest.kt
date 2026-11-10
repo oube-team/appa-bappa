@@ -90,6 +90,11 @@ class DriveTextsTest {
             "시속 5km 이하에서는 스티어링 휠을 돌려도 바쁘지 않아요",
             ruleText(free, signals(steering = 180.0))
         )
+        assertEquals(
+            "시속 5km 이하에서는 안내 지점이 가까워도 바쁘지 않아요",
+            ruleText(free, signals(maneuverMeters = 30.0))
+        )
+        assertEquals("바쁜 상황이 아니에요", ruleText(free, signals(maneuverMeters = 120.0)))
         assertEquals("바쁜 상황이 아니에요", ruleText(free, signals(50.0)))
         assertEquals("바쁜 상황이 아니에요", ruleText(null, signals()))
     }
@@ -104,6 +109,10 @@ class DriveTextsTest {
     fun `알림 문장의 숫자는 가상의 차의 기준 값으로 만든다`() {
         assertEquals("시속 15km 이상에서 급제동을 시연할 수 있어요", DriveHint.HARD_BRAKE_TOO_SLOW.text())
         assertEquals("도심 도로라 시속 50km까지 달릴 수 있어요", DriveHint.CITY_SPEED_LIMIT.text())
+        assertEquals(
+            "차로를 변경하려면 시속 10km 이상으로 달려 보세요",
+            DriveHint.LANE_CHANGE_TOO_SLOW.text()
+        )
         assertEquals(
             "왼쪽 방향지시등을 30m 전부터 켜지 않아서\n좌회전하지 않고 직진해요",
             DriveHint.LEFT_TURN_NEEDS_SIGNAL.text()

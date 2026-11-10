@@ -9,7 +9,7 @@ enum class Reason {
     MERGE,
     HIGHWAY_ENTRY,
     HIGHWAY_EXIT,
-    LANE_CHANGE,
+    TURN_SIGNAL,
     LEFT_TURN,
     RIGHT_TURN,
     U_TURN,
@@ -29,7 +29,8 @@ enum class Reason {
 
     companion object {
         // 근처에 안내가 있으면 방향지시등이나 스티어링 휠도 그 안내 때문에 조작한 것으로 판단해 안내의 종류를 알린다.
-        // 안내가 없을 때 방향지시등 조작은 차로 변경으로 알리고, 스티어링 휠 조작은 회전으로 알린다.
+        // 안내가 없을 때 방향지시등을 켠 것이 차로 변경인지 회전인지는 알 수 없으므로 방향지시등을 켰다고만 알리고,
+        // 스티어링 휠 조작은 회전으로 알린다.
         // 좌회전, 우회전, 유턴 안내 지점을 지난 뒤(RECOVERING)에는 그동안 스티어링 휠을 돌린 적이 없으면 회전하지 않고
         // 지나간 것으로 판단해, 회전했다고 알리지 않고 지점을 지났다고 알린다.
         fun of(status: BusyStatus): Reason? = when (status.cause) {
@@ -38,10 +39,20 @@ enum class Reason {
             BusyCause.BLIND_SPOT_WARNING -> BLIND_SPOT_WARNING
             BusyCause.HARD_BRAKING -> HARD_BRAKING
             BusyCause.REVERSING -> REVERSING
-            BusyCause.FAST_SIGNALING, BusyCause.SIGNALING -> guidedReason(status) ?: LANE_CHANGE
+            BusyCause.FAST_SIGNALING, BusyCause.SIGNALING -> guidedReason(status) ?: TURN_SIGNAL
             BusyCause.TURNING -> guidedReason(status) ?: TURNING
             BusyCause.MANEUVER, BusyCause.UPCOMING_MANEUVER -> guidedReason(status)
         }
+
+        // 방향지시등이나 스티어링 휠 조작을 근처 안내의 종류로 알리는데 그 안내 지점에 아직 닿기 전이면(BusyStatus의
+        // approaching) true를 반환한다. 좌회전 지점 200m 앞에서 차로를 변경하려고 방향지시등을 켠 경우처럼 회전이나 합류를
+        // 아직 시작하지 않았으므로, 화면이 "좌회전하고 있어요" 대신 SOON 문장("좌회전할 지점이 가까워요")으로 알린다. 경고,
+        // 급제동, 후진은 근처 안내와 관계없이 그 근거를 알리므로 false를 반환한다.
+        fun isApproaching(status: BusyStatus): Boolean =
+            status.approaching && status.cause in guidedCauses
+
+        private val guidedCauses =
+            setOf(BusyCause.FAST_SIGNALING, BusyCause.SIGNALING, BusyCause.TURNING)
 
         private fun guidedReason(status: BusyStatus): Reason? {
             val reason = maneuverReason(status.turnTypeName)

@@ -206,6 +206,7 @@ class BusyService : Service() {
             MonitorState(
                 mood = moodTracker.update(status.state, now),
                 reason = Reason.of(status),
+                approaching = Reason.isApproaching(status),
                 parked = realGear == null || realGear == Gear.PARK,
                 demo = demos.progress,
                 drive = drives.progress
@@ -237,5 +238,10 @@ class BusyService : Service() {
     }
 }
 
-private fun BusyStatus.describe() =
-    listOfNotNull(state, cause, turnTypeName, "turned".takeIf { turned }).joinToString(" ")
+private fun BusyStatus.describe() = listOfNotNull(
+    state,
+    cause,
+    turnTypeName,
+    "turned".takeIf { turned },
+    "approaching".takeIf { approaching }
+).joinToString(" ")

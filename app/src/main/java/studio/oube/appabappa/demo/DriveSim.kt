@@ -78,7 +78,9 @@ private const val LATERAL_PER_SPEED = 0.035
 private const val LATERAL_MIN_MPS = 0.6
 private const val LATERAL_MAX_MPS = 1.2
 private const val LATERAL_PER_FORWARD = 0.216
-private const val LANE_CHANGE_MIN_KMH = 10.0
+
+// 이 차속 이상에서만 차로 변경을 시작한다. 화면의 알림 문장도 이 값을 사용한다.
+internal const val LANE_CHANGE_MIN_KMH = 10.0
 
 // 도로교통법 시행령 별표 2: 진로를 바꾸려는 지점 30m 전(고속도로는 100m 전)부터 신호한다. 일반도로 최고속도가 시속
 // 80km(시행규칙 제19조)라서 그보다 빠르면 고속도로로 판단하고 100m를 적용한다. 자동차전용도로에도 100m를 적용하게
@@ -135,12 +137,15 @@ enum class DriveHint {
     HARD_BRAKE_TOO_SLOW,
     HARD_BRAKE_NO_LEAD,
     SOLID_LINE,
+    LANE_CHANGE_TOO_SLOW,
     CITY_SPEED_LIMIT,
     LEFT_TURN_TOO_FAST,
     LEFT_TURN_LANE,
     LEFT_TURN_SIGNAL,
     LEFT_TURN_NEEDS_LANE,
     LEFT_TURN_NEEDS_SIGNAL,
+    GUIDE_WHILE_TURNING,
+    WHEEL_WHILE_TURNING,
     MERGE_TOO_EARLY,
     MERGE_SIGNAL,
     MERGE_FORCED
@@ -196,7 +201,7 @@ class DriveSim {
     private var requiredSignalMeters = 0.0
     private var laneChangedForSignal = false
     private var laneChangeSide = TurnSignal.OFF
-    private var solidWarned = false
+    private var warnedBlock: DriveHint? = null
     private var laneTarget = 0.0
     private var turningLeft = false
     private var headingRad = 0.0
@@ -325,16 +330,24 @@ class DriveSim {
     // 좌회전 장면의 교차로는 도심에 있어서 좌회전 안내는 시속 50km 이하에서만 켠다. 안내를 고르면 장면이 바뀌므로,
     // 차로를 변경하는 동작 없이 차를 장면의 출발 차로에 둔다. 합류 장면은 진입로에서 출발하고, 진입로가 없는 장면을
     // 고르면 진입로에 있거나 진입로에서 본선으로 옮기던 차를 3차로에 둔다. 방향지시등을 켠 채 안내를 고르면 새 장면의
-    // 규칙으로 신호 거리를 다시 센다. 좌회전하는 중에는 안내를 골라도 장면을 그대로 둔다.
+    // 규칙으로 신호 거리를 다시 센다. 새 장면에 남지 않도록 앞 장면의 알림을 감춘다. 좌회전하는 중에는 안내를 골라도
+    // 장면을 그대로 두고 이유를 알린다.
     fun chooseGuide(next: DriveGuide?, nowMillis: Long) {
-        if (turningLeft) return
-        if (next == DriveGuide.LEFT_TURN && speedKmh > CITY_LIMIT_KMH) {
-            show(DriveHint.LEFT_TURN_TOO_FAST, nowMillis)
+        val tooFast = next == DriveGuide.LEFT_TURN && speedKmh > CITY_LIMIT_KMH
+        val refused =
+            when {
+                turningLeft -> DriveHint.GUIDE_WHILE_TURNING
+                tooFast -> DriveHint.LEFT_TURN_TOO_FAST
+                else -> null
+            }
+        if (refused != null) {
+            show(refused, nowMillis)
             return
         }
         guide = next
         guideMeters = next?.startMeters ?: 0.0
         reminded.clear()
+        hintUntil = nowMillis
         when {
             next == DriveGuide.MERGE -> placeIn(RAMP_LANE_M)
             lateralMeters > RIGHT_LANE_M -> placeIn(RIGHT_LANE_M)
@@ -359,13 +372,14 @@ class DriveSim {
         }
     }
 
-    fun grabWheel() {
+    // 좌회전하는 동안에는 스티어링 휠이 호에 맞춰 스스로 돌아서 손으로 돌릴 수 없으므로, 잡으면 그 이유를 알린다.
+    fun grabWheel(nowMillis: Long) {
         holdingWheel = true
+        if (turningLeft) show(DriveHint.WHEEL_WHILE_TURNING, nowMillis)
     }
 
     // clockwiseRad는 화면에서 스티어링 휠을 시계 방향으로 돌린 각도(라디안)다. 시계 방향은 오른쪽이므로 그만큼
-    // 스티어링 휠 각도를 줄인다. 좌회전하는 동안에는 스티어링 휠이 호에 맞춰 스스로 돌므로, 손으로 돌려도 반영하지
-    // 않는다.
+    // 스티어링 휠 각도를 줄인다. 좌회전하는 동안에는 손으로 돌려도 반영하지 않는다.
     fun turnWheel(clockwiseRad: Double) {
         if (turningLeft) return
         val next = steeringDeg - clockwiseRad * DEG_PER_RAD
@@ -391,7 +405,7 @@ class DriveSim {
         signaledMeters = 0.0
         requiredSignalMeters = 0.0
         laneChangedForSignal = false
-        solidWarned = false
+        warnedBlock = null
     }
 
     private fun placeIn(lane: Double) {
@@ -546,22 +560,24 @@ class DriveSim {
         return maxOf(step, (lateralMeters - RIGHT_LANE_M) * share)
     }
 
-    // 세 차로 밖으로는 변경하지 않는다. 진입로에서는 본선으로 들어올 수만 있고 본선에서 진입로로 나가지 않는다.
+    // 세 차로 밖으로는 변경하지 않는다. 진입로에서는 본선으로 들어올 수만 있고 본선에서 진입로로 나가지 않는다. 신호
+    // 거리를 채웠는데 변경하지 못하면 이유를 알리고, 같은 이유는 방향지시등을 켠 동안 한 번만 알린다.
     private fun tryLaneChange(nowMillis: Long) {
-        val ready =
-            speedKmh >= LANE_CHANGE_MIN_KMH &&
-                signaledMeters >= requiredSignalMeters &&
-                lateralMeters == laneTarget
+        val ready = signaledMeters >= requiredSignalMeters && lateralMeters == laneTarget
         val next = laneTarget + if (turn == TurnSignal.RIGHT) LANE_WIDTH_M else -LANE_WIDTH_M
         if (!ready || abs(next) > LANE_WIDTH_M) return
-        val blocked = solidLineHint()
+        val blocked = laneChangeBlock()
         if (blocked == null) {
             startLaneChange(next)
-        } else if (!solidWarned) {
+        } else if (blocked != warnedBlock) {
             show(blocked, nowMillis)
-            solidWarned = true
+            warnedBlock = blocked
         }
     }
+
+    // 차로를 변경하지 못하는 이유를 반환한다. 실선 구간에서는 빨리 달려도 변경하지 못하므로 실선을 먼저 확인한다.
+    private fun laneChangeBlock(): DriveHint? =
+        solidLineHint() ?: DriveHint.LANE_CHANGE_TOO_SLOW.takeIf { speedKmh < LANE_CHANGE_MIN_KMH }
 
     private fun startLaneChange(next: Double) {
         laneChangeSide = if (next < laneTarget) TurnSignal.LEFT else TurnSignal.RIGHT
@@ -583,10 +599,11 @@ class DriveSim {
     }
 
     // 차는 변경을 시작한 뒤 차로 폭의 절반을 옆으로 가야 차선을 넘고 그동안 앞으로도 달린다. 차선을 넘는 자리가
-    // 실선 구간의 시작(교차로 36m 앞)부터 건너편 횡단보도의 끝 사이이면 차단한다.
+    // 실선 구간의 시작(교차로 36m 앞)부터 건너편 횡단보도의 끝 사이이면 차단한다. 정지한 차는 옆으로 움직이지
+    // 않으므로 지금 자리가 그 사이인지 확인한다.
     private fun crossesLineAtCrossing(): Boolean {
         val entry = guideMeters + CROSS_ENTRY_M
-        val toLine = speedMps * LANE_HALF_M / lateralMps
+        val toLine = if (speedMps > 0) speedMps * LANE_HALF_M / lateralMps else 0.0
         return entry - toLine <= SOLID_FAR_M && entry + CROSS_EXIT_M > 0
     }
 

@@ -1,8 +1,10 @@
 package studio.oube.appabappa.status
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import studio.oube.appabappa.engine.BusyCause
 import studio.oube.appabappa.engine.BusyState
@@ -31,9 +33,9 @@ class ReasonTest {
     }
 
     @Test
-    fun `근처에 안내가 없으면 방향지시등 조작은 차로 변경으로, 스티어링 휠 조작은 회전으로 알린다`() {
-        assertEquals(Reason.LANE_CHANGE, Reason.of(busy(BusyCause.SIGNALING, null)))
-        assertEquals(Reason.LANE_CHANGE, Reason.of(busy(BusyCause.FAST_SIGNALING, null)))
+    fun `근처에 안내가 없으면 방향지시등 조작은 방향지시등으로, 스티어링 휠 조작은 회전으로 알린다`() {
+        assertEquals(Reason.TURN_SIGNAL, Reason.of(busy(BusyCause.SIGNALING, null)))
+        assertEquals(Reason.TURN_SIGNAL, Reason.of(busy(BusyCause.FAST_SIGNALING, null)))
         assertEquals(Reason.TURNING, Reason.of(busy(BusyCause.TURNING, null)))
     }
 
@@ -57,6 +59,33 @@ class ReasonTest {
         assertEquals(Reason.MERGE, after("TURN_DEVIDE_MERGE", turned = false))
         // 지점을 지나기 전(BUSY)에는 회전 안내를 그대로 알린다.
         assertEquals(Reason.LEFT_TURN, Reason.of(busy(BusyCause.MANEUVER, "TURN_LEFT")))
+    }
+
+    @Test
+    fun `안내 지점에 닿기 전에 방향지시등이나 스티어링 휠을 조작했으면 isApproaching이 true다`() {
+        fun ahead(cause: BusyCause, state: BusyState = BusyState.BUSY) =
+            BusyStatus(state, cause, "TURN_LEFT", approaching = true)
+
+        assertTrue(Reason.isApproaching(ahead(BusyCause.SIGNALING)))
+        assertTrue(Reason.isApproaching(ahead(BusyCause.TURNING)))
+        assertTrue(Reason.isApproaching(ahead(BusyCause.FAST_SIGNALING, BusyState.VERY_BUSY)))
+        assertFalse(Reason.isApproaching(busy(BusyCause.SIGNALING, "TURN_LEFT")))
+        assertFalse(Reason.isApproaching(busy(BusyCause.SIGNALING, null)))
+    }
+
+    @Test
+    fun `경고와 급제동과 후진은 안내 지점에 닿기 전이어도 isApproaching이 false다`() {
+        val causes =
+            listOf(
+                BusyCause.FORWARD_COLLISION_WARNING,
+                BusyCause.BLIND_SPOT_WARNING,
+                BusyCause.HARD_BRAKING,
+                BusyCause.REVERSING
+            )
+        for (cause in causes) {
+            val status = BusyStatus(BusyState.VERY_BUSY, cause, "TURN_LEFT", approaching = true)
+            assertFalse(cause.name, Reason.isApproaching(status))
+        }
     }
 
     @Test

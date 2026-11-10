@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
     private val settings by lazy { SettingsStore.of(this) }
     private val trips by lazy { TripStore.of(this) }
     private var permissionGuide by mutableStateOf(false)
+    private var requestingPermissions = false
     private val permissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             onPermissionResult()
@@ -115,15 +116,20 @@ class MainActivity : ComponentActivity() {
         if (before != null && speedNotice == null) startBusyService()
     }
 
+    // 권한 요청 창이 표시되어 있는 동안에는 창 뒤로 권한 안내가 보이도록, 요청이 끝난 뒤에 안내를 닫는다
+    // (onPermissionResult). 안내를 먼저 닫으면 아직 답하지 않았는데 창 뒤로 "차속 권한이 없어서"가 보인다. 요청이
+    // 끝나기 전에 "계속"을 한 번 더 눌러도 권한을 다시 요청하지 않는다.
     private fun requestMissingPermissions() {
-        permissionGuide = false
+        if (requestingPermissions) return
         val missing = missingPermissions()
         // 권한이 이미 모두 허용돼 있으면 권한 요청 창이 표시되지 않아 화면이 다시 표시되지 않으므로, 여기서 안내를
-        // 갱신한다.
+        // 닫고 갱신한다.
         if (missing.isEmpty()) {
+            permissionGuide = false
             checkSpeedPermission()
             return
         }
+        requestingPermissions = true
         rememberSpeedRationale(shouldShowRequestPermissionRationale(Car.PERMISSION_SPEED))
         permissionRequest.launch(missing.toTypedArray())
     }
@@ -136,6 +142,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onPermissionResult() {
+        requestingPermissions = false
+        permissionGuide = false
         // 차속 권한을 두 번 거절하면 Android가 더는 묻지 않고, shouldShowRequestPermissionRationale이 true에서 false로 바뀐다.
         // 처음 묻는 창을 Back으로 닫으면 거절로 처리되지 않아 다시 물을 수 있는데, 이때도 이 값은 false다(2026-11-07 에뮬레이터).
         // 지금 값만으로는 두 경우를 구별할 수 없으므로 요청 전 값과 비교한다.

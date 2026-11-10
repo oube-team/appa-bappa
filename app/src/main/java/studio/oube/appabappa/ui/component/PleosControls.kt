@@ -136,8 +136,6 @@ private fun Segment(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .height(64.dp)
-            .then(if (selected) Modifier.level1Shadow(shape) else Modifier)
-            .background(background, shape)
             .selectable(
                 selected = selected,
                 interactionSource = interaction,
@@ -146,6 +144,9 @@ private fun Segment(
                 role = Role.RadioButton,
                 onClick = onClick
             )
+            .pressShrink(pressed)
+            .then(if (selected) Modifier.level1Shadow(shape) else Modifier)
+            .background(background, shape)
             .padding(horizontal = 18.dp)
     ) {
         PleosText(label, PleosType.bodyLarge.strong, labelColor, maxLines = 1)

@@ -21,9 +21,12 @@ internal fun withJosa(word: String, withFinal: String, withoutFinal: String): St
 internal data class StatusCopy(val title: List<String>, val reason: String?, val sub: String)
 
 // 실내 조명으로 알리기를 끄면 조명 색이 바뀌지 않으므로, FREE 문구에서 조명 색 대신 화면으로 알린다고 안내한다.
+// approaching은 바쁜 이유로 알리는 안내 지점에 아직 닿기 전이면 true다(Reason.isApproaching). 이때는 BUSY에서도 SOON
+// 문장으로 알려서, 아직 시작하지 않은 회전이나 합류를 하고 있다고 알리지 않는다.
 internal fun statusCopy(
     mood: Mood,
     reason: Reason?,
+    approaching: Boolean,
     who: String,
     lightEnabled: Boolean
 ): StatusCopy {
@@ -47,7 +50,7 @@ internal fun statusCopy(
 
         Mood.BUSY -> StatusCopy(
             listOf("$subject 운전에", "집중하고 있어요"),
-            reason?.lines()?.busy,
+            reason?.lines()?.let { lines -> lines.soon.takeIf { approaching } ?: lines.busy },
             "끝나면 초록으로 알려 드릴게요"
         )
 
@@ -66,6 +69,7 @@ internal fun statusCopy(
 }
 
 // 동승자가 읽을 바쁜 이유 한 줄이다. 엔진은 안내 지점이 가까울 때만 SOON으로 판단하므로, 안내 종류에만 soon 문장이 있다.
+// soon 문장은 SOON 상태일 때와, 바쁜 상태인데 그 안내 지점에 아직 닿기 전일 때 사용한다.
 internal class ReasonLines(val soon: String?, val busy: String, val recovering: String)
 
 // 이유마다 문장 세 개를 나열한 표라서 길지만, when으로 두면 이유를 추가할 때 문장을 빠뜨리지 않는다.
@@ -91,11 +95,12 @@ internal fun Reason.lines(): ReasonLines = when (this) {
         "방금 나들목으로 나갔어요"
     )
 
-    // 갈림길 안내(TURN_KEEP)는 JUNCTION으로 알리고 LANE_CHANGE는 안내 없이 켠 방향지시등에만 사용하므로, SOON 문장이 없다.
-    Reason.LANE_CHANGE -> ReasonLines(
+    // 안내 없이 켠 방향지시등이다. 앱은 방향지시등만 알고 차로를 실제로 변경했는지는 알 수 없어서, 방향지시등을 켜고
+    // 껐다고 알린다. 엔진은 안내 지점이 가까울 때만 SOON으로 판단하므로 SOON 문장이 없다.
+    Reason.TURN_SIGNAL -> ReasonLines(
         null,
-        "차로를 바꾸고 있어요",
-        "방금 차로를 바꿨어요"
+        "방향지시등을 켜고 있어요",
+        "방금 방향지시등을 껐어요"
     )
 
     Reason.LEFT_TURN -> ReasonLines(

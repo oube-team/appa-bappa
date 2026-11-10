@@ -6,6 +6,7 @@ import studio.oube.appabappa.demo.CITY_LIMIT_KMH
 import studio.oube.appabappa.demo.DriveGuide
 import studio.oube.appabappa.demo.DriveHint
 import studio.oube.appabappa.demo.HARD_BRAKE_MIN_KMH
+import studio.oube.appabappa.demo.LANE_CHANGE_MIN_KMH
 import studio.oube.appabappa.demo.ROAD_SIGNAL_METERS
 import studio.oube.appabappa.engine.BusyCause
 import studio.oube.appabappa.engine.BusyConfig
@@ -79,7 +80,7 @@ private fun busyRule(cause: BusyCause?, signals: VehicleSignals, config: BusyCon
         BusyCause.UPCOMING_MANEUVER, null -> soonRule(config)
     }
 
-// 바쁘지 않은데 방향지시등을 켰거나 스티어링 휠을 돌렸으면, 왜 바쁘지 않은지 알려 준다.
+// 바쁘지 않은데 방향지시등을 켰거나 스티어링 휠을 돌렸거나 안내 지점이 가까우면, 왜 바쁘지 않은지 알려 준다.
 private fun freeRule(signals: VehicleSignals, config: BusyConfig): String = when {
     signals.gear == Gear.PARK -> "기어가 P라서 바쁘지 않아요"
 
@@ -90,7 +91,14 @@ private fun freeRule(signals: VehicleSignals, config: BusyConfig): String = when
     abs(signals.steeringAngleDeg) >= config.turningAngleDeg ->
         "${slowSpeed(config)} 스티어링 휠을 돌려도 바쁘지 않아요"
 
+    isNearGuide(signals, config) -> "${slowSpeed(config)} 안내 지점이 가까워도 바쁘지 않아요"
+
     else -> NOT_BUSY
+}
+
+private fun isNearGuide(signals: VehicleSignals, config: BusyConfig): Boolean {
+    val meters = signals.nextManeuver?.distanceMeters ?: return false
+    return meters <= config.passingMeters
 }
 
 private fun slowSpeed(config: BusyConfig) = "시속 ${config.movingSpeedKmh.text()}km 이하에서는"
@@ -104,13 +112,13 @@ internal fun DriveGuide.label(): String = when (this) {
 // 조작을 반영하지 않았거나 다음에 할 조작을 알릴 때 화면에 잠깐 표시하는 문장이다. 세로 창에서 두 줄이 되는 긴 문장은
 // 마지막 낱말만 아랫줄로 넘어가지 않도록 끊을 자리에 줄바꿈(\n)을 추가한다.
 internal fun DriveHint.text(): String = when (this) {
-    DriveHint.STOP_BEFORE_PARK -> "차가 멈춘 뒤에 P로 바꿀 수 있어요"
+    DriveHint.STOP_BEFORE_PARK -> "정차한 뒤에 P로 변경할 수 있어요"
 
-    DriveHint.STOP_BEFORE_REVERSE -> "차가 멈춘 뒤에 R로 바꿀 수 있어요"
+    DriveHint.STOP_BEFORE_REVERSE -> "정차한 뒤에 R로 변경할 수 있어요"
 
-    DriveHint.SHIFT_TO_DRIVE -> "출발하려면 기어를 D로 바꿔 보세요"
+    DriveHint.SHIFT_TO_DRIVE -> "출발하려면 기어를 D로 변경해 보세요"
 
-    DriveHint.NEUTRAL_GEAR -> "기어가 N이에요. D로 바꿔 보세요"
+    DriveHint.NEUTRAL_GEAR -> "기어가 N이에요. D로 변경해 보세요"
 
     DriveHint.REVERSE_STAYS -> "도로에서는 후진할 수 없어서 R에서는 움직이지 않아요"
 
@@ -119,7 +127,10 @@ internal fun DriveHint.text(): String = when (this) {
 
     DriveHint.HARD_BRAKE_NO_LEAD -> "같은 차로에 앞차가 있을 때 급제동을 시연할 수 있어요"
 
-    DriveHint.SOLID_LINE -> "교차로와 그 앞 실선 구간에서는 차로를 바꿀 수 없어요"
+    DriveHint.SOLID_LINE -> "교차로와 그 앞 실선 구간에서는 차로를 변경할 수 없어요"
+
+    DriveHint.LANE_CHANGE_TOO_SLOW ->
+        "차로를 변경하려면 시속 ${LANE_CHANGE_MIN_KMH.text()}km 이상으로 달려 보세요"
 
     DriveHint.CITY_SPEED_LIMIT -> "도심 도로라 시속 ${CITY_LIMIT_KMH.text()}km까지 달릴 수 있어요"
 
@@ -135,7 +146,11 @@ internal fun DriveHint.text(): String = when (this) {
     DriveHint.LEFT_TURN_NEEDS_SIGNAL ->
         "왼쪽 방향지시등을 ${ROAD_SIGNAL_METERS.text()}m 전부터 켜지 않아서\n좌회전하지 않고 직진해요"
 
-    DriveHint.MERGE_TOO_EARLY -> "합류 구간까지는 실선이라 아직 차로를 바꿀 수 없어요"
+    DriveHint.GUIDE_WHILE_TURNING -> "좌회전을 마친 뒤에 안내를 변경할 수 있어요"
+
+    DriveHint.WHEEL_WHILE_TURNING -> "좌회전하는 동안에는 스티어링 휠이 자동으로 돌아요"
+
+    DriveHint.MERGE_TOO_EARLY -> "합류 구간까지는 실선이라 아직 차로를 변경할 수 없어요"
 
     DriveHint.MERGE_SIGNAL -> "합류하려면 왼쪽 방향지시등을 켜 보세요"
 

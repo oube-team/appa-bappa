@@ -20,10 +20,11 @@ data class DemoProgress(
 data class DriveProgress(val status: BusyStatus, val recoverHoldMillis: Long)
 
 // 서비스가 실행 중이 아니면 기어를 알 수 없으므로, 서비스가 종료된 뒤에도 설정 화면을 열 수 있도록 parked의 기본값을
-// true로 설정한다.
+// true로 설정한다. approaching은 바쁜 이유로 알리는 안내 지점에 아직 닿기 전이면 true다(Reason.isApproaching).
 data class MonitorState(
     val mood: Mood = Mood.FREE,
     val reason: Reason? = null,
+    val approaching: Boolean = false,
     val parked: Boolean = true,
     val demo: DemoProgress? = null,
     val drive: DriveProgress? = null

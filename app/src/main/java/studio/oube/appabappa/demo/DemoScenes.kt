@@ -83,7 +83,7 @@ private val redLight =
     )
 
 // 급제동: 50 km/h에서 1초 만에 35 km/h로 감속하면 VERY_BUSY가 된다. 도로교통법 제19조 제4항은 위험방지를 위한
-// 경우가 아니면 급제동을 금지하므로, 설명(ui/DemoTexts.kt)에서 앞차가 갑자기 속도를 줄인 상황이라고 알린다.
+// 경우가 아니면 급제동을 금지하므로, 설명(ui/DemoTexts.kt)에서 앞차가 갑자기 감속한 상황이라고 알린다.
 private val hardBrake =
     DemoScene(
         "hard_brake",

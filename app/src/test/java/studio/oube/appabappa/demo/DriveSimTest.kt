@@ -132,7 +132,7 @@ class DriveSimTest {
     @Test
     fun `방향지시등은 스티어링 휠을 켠 쪽으로 60도 이상 돌린 뒤 손을 뗀 스티어링 휠이 10도 안으로 돌아오면 꺼진다`() {
         sim.toggleTurn(TurnSignal.LEFT)
-        sim.grabWheel()
+        sim.grabWheel(now)
         sim.turnWheel(-Math.toRadians(90.0))
         run(0.1)
         assertEquals(90.0, sim.steeringDeg, 0.001)
@@ -145,7 +145,7 @@ class DriveSimTest {
 
     @Test
     fun `스티어링 휠을 시계 방향으로 돌리면 steeringDeg가 음수(오른쪽)가 된다`() {
-        sim.grabWheel()
+        sim.grabWheel(now)
         sim.turnWheel(Math.toRadians(30.0))
         assertEquals(-30.0, sim.steeringDeg, 0.001)
     }
@@ -186,6 +186,39 @@ class DriveSimTest {
 
         run(2.0)
         assertEquals(stoppedAt, sim.lateralMeters, 0.0)
+    }
+
+    @Test
+    fun `시속 10km보다 느리면 신호 거리를 채워도 차로를 변경하지 않고 이유를 알려 준다`() {
+        accelerateTo(8.0)
+        sim.toggleTurn(TurnSignal.RIGHT)
+        val signaledFrom = sim.travelledMeters
+        while (sim.travelledMeters < signaledFrom + 31) run(0.05)
+        assertEquals(0.0, sim.lateralMeters, 0.0)
+        assertEquals(DriveHint.LANE_CHANGE_TOO_SLOW, sim.hintAt(now))
+
+        // 알림은 한 번만 표시하고, 시속 10km 이상이 되면 차로를 변경한다.
+        run(3.0)
+        assertNull(sim.hintAt(now))
+        accelerateTo(20.0)
+        run(10.0)
+        assertEquals(3.5, sim.lateralMeters, 0.001)
+    }
+
+    @Test
+    fun `실선 구간에 정지해 있어도 차속이 느리다고 알리지 않고 실선 알림을 유지한다`() {
+        sim.chooseGuide(DriveGuide.LEFT_TURN, now)
+        accelerateTo(20.0)
+        while (sim.guideMeters > 60) run(0.05)
+        sim.toggleTurn(TurnSignal.LEFT)
+        while (sim.guideMeters > 15) run(0.05)
+        assertEquals(DriveHint.SOLID_LINE, sim.hint)
+
+        sim.pressBrake(true)
+        run(5.0)
+        assertEquals(0.0, sim.speedMps, 0.0)
+        assertTrue(sim.guideMeters > 1.5)
+        assertEquals(DriveHint.SOLID_LINE, sim.hint)
     }
 
     @Test
@@ -281,7 +314,7 @@ class DriveSimTest {
     }
 
     @Test
-    fun `좌회전하는 동안에는 스티어링 휠을 손으로 돌려도 반영하지 않는다`() {
+    fun `좌회전하는 동안에는 스티어링 휠을 손으로 돌려도 반영하지 않고 이유를 알려 준다`() {
         sim.chooseGuide(DriveGuide.LEFT_TURN, now)
         accelerateTo(40.0)
         sim.toggleTurn(TurnSignal.LEFT)
@@ -289,9 +322,26 @@ class DriveSimTest {
         run(0.5)
         val turning = sim.steeringDeg
 
-        sim.grabWheel()
+        sim.grabWheel(now)
         sim.turnWheel(Math.toRadians(90.0))
         assertEquals(turning, sim.steeringDeg, 0.0)
+        assertEquals(DriveHint.WHEEL_WHILE_TURNING, sim.hintAt(now))
+    }
+
+    @Test
+    fun `좌회전하는 동안에는 안내를 골라도 장면을 그대로 두고 이유를 알려 준다`() {
+        sim.chooseGuide(DriveGuide.LEFT_TURN, now)
+        accelerateTo(40.0)
+        sim.toggleTurn(TurnSignal.LEFT)
+        while (sim.turnRad == null && sim.guide != null) run(0.05)
+
+        sim.chooseGuide(null, now)
+        assertEquals(DriveGuide.LEFT_TURN, sim.guide)
+        assertEquals(DriveHint.GUIDE_WHILE_TURNING, sim.hintAt(now))
+
+        sim.chooseGuide(DriveGuide.MERGE, now)
+        assertEquals(DriveGuide.LEFT_TURN, sim.guide)
+        assertNotNull(sim.turnRad)
     }
 
     @Test
@@ -482,6 +532,16 @@ class DriveSimTest {
 
         assertEquals(3.5, sim.lateralMeters, 0.0)
         assertEquals(TurnSignal.OFF, sim.turn)
+    }
+
+    @Test
+    fun `안내를 끄면 앞 장면의 알림을 감춘다`() {
+        accelerateTo(90.0)
+        sim.chooseGuide(DriveGuide.MERGE, now)
+        while (sim.hintAt(now) != DriveHint.MERGE_FORCED) run(0.05)
+
+        sim.chooseGuide(null, now)
+        assertNull(sim.hintAt(now))
     }
 
     @Test

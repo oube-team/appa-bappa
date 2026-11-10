@@ -45,6 +45,13 @@ internal class BusyCriteria(private val config: BusyConfig) {
         }
     }
 
+    // 다음 안내 지점까지 passingMeters 또는 passingSeconds 안으로 남았으면, 지점을 지나는 중으로 판단해 true를 반환한다.
+    fun isPassingManeuver(signals: VehicleSignals): Boolean {
+        val maneuver = demandingManeuver(signals) ?: return false
+        return maneuver.distanceMeters <= config.passingMeters ||
+            secondsTo(maneuver, signals) <= config.passingSeconds
+    }
+
     // SafetyWarning에 종류를 추가했을 때 근거를 빠뜨리면 컴파일되지 않도록, else 없이 모든 값을 나열한다.
     private fun warningCause(warning: SafetyWarning) = when (warning) {
         SafetyWarning.FORWARD_COLLISION -> BusyCause.FORWARD_COLLISION_WARNING
@@ -52,12 +59,6 @@ internal class BusyCriteria(private val config: BusyConfig) {
     }
 
     private fun isMoving(signals: VehicleSignals) = signals.speedKmh > config.movingSpeedKmh
-
-    private fun isPassingManeuver(signals: VehicleSignals): Boolean {
-        val maneuver = demandingManeuver(signals) ?: return false
-        return maneuver.distanceMeters <= config.passingMeters ||
-            secondsTo(maneuver, signals) <= config.passingSeconds
-    }
 
     private fun demandingManeuver(signals: VehicleSignals) =
         signals.nextManeuver?.takeIf { ManeuverTypes.isDemanding(it.turnTypeName) }

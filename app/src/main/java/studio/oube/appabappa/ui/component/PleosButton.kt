@@ -47,7 +47,8 @@ enum class ButtonSize(val height: Dp, val radius: Dp, val paddingHorizontal: Dp)
 }
 
 // 비활성 버튼은 Pleos 규격대로 바탕에 2px divider/secondary 테두리를 두르고(buttons/basic/disabled_border), 글자는
-// text/dark/quaternary로 흐리게 한다. 누르는 동안에는 바탕을 pressed 토큰으로 변경하고 물결 효과는 사용하지 않는다.
+// text/dark/quaternary로 흐리게 한다. 누르는 동안에는 95%로 축소하고(pressShrink) 바탕을 pressed 토큰으로 변경한다. 물결
+// 효과는 사용하지 않는다.
 // icon은 글자 앞에 놓는 32 크기 아이콘이고, contentColor를 정하면 활성 상태의 글자와 아이콘을 그 색으로 칠한다.
 @Composable
 fun PleosButton(
@@ -94,8 +95,6 @@ fun PleosButton(
         icon = icon,
         modifier = modifier
             .height(size.height)
-            .background(background, shape)
-            .then(outline)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -103,6 +102,9 @@ fun PleosButton(
                 role = Role.Button,
                 onClick = onClick
             )
+            .pressShrink(pressed)
+            .background(background, shape)
+            .then(outline)
     )
 }
 
@@ -127,16 +129,17 @@ fun PleosToggleButton(
         icon = null,
         modifier = modifier
             .height(size.height)
-            .background(
-                if (pressed) states.pressed else states.enabled,
-                RoundedCornerShape(size.radius)
-            )
             .toggleable(
                 value = checked,
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Switch,
                 onValueChange = onCheckedChange
+            )
+            .pressShrink(pressed)
+            .background(
+                if (pressed) states.pressed else states.enabled,
+                RoundedCornerShape(size.radius)
             )
     )
 }

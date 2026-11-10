@@ -77,7 +77,13 @@ internal fun Cockpit(sim: DriveSim, view: DriveView, layout: DriveLayout, light:
     DashBoard(layout, light, info.turn)
     layout.cluster?.let { Cluster(it, info.gear, info.speedKmh, info.turn, info.blinkOn) }
     TurnControls(layout, info.turn, info.blinkOn, sim::toggleTurn)
-    SteeringWheel(layout.wheel, info.steeringDeg, sim::grabWheel, sim::turnWheel, sim::releaseWheel)
+    SteeringWheel(
+        layout.wheel,
+        info.steeringDeg,
+        { sim.grabWheel(clock()) },
+        sim::turnWheel,
+        sim::releaseWheel
+    )
     Label(wheelHint(info.steeringDeg), layout.wheel.x, layout.wheelHintTop, layout.wheel.width)
     GearControl(layout, info.gear) { sim.chooseGear(it, clock()) }
     PleosButton(

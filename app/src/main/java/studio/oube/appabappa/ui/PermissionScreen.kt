@@ -39,7 +39,7 @@ internal fun PermissionScreen(who: String, layout: AppLayout, onContinue: () -> 
                 colors.text.primary
             )
             Spacer(Modifier.height(40.dp))
-            Column(Modifier.width(layout.permissionListWidth)) {
+            Column(Modifier.fillMaxWidth()) {
                 PermissionItem(
                     "차속",
                     "방향지시등을 켠 채 달리는지, 급하게 감속하는지 알려면 차속이 필요해요. 다음 창에는 위치 정보로 표시돼요",
@@ -55,8 +55,7 @@ internal fun PermissionScreen(who: String, layout: AppLayout, onContinue: () -> 
             PleosText(
                 "차속을 허용하지 않으면 후진할 때만 알려 드릴 수 있어요",
                 PleosType.bodySmall.normal,
-                colors.text.tertiary,
-                Modifier.width(layout.permissionListWidth)
+                colors.text.tertiary
             )
             Spacer(Modifier.height(24.dp))
             PleosButton(

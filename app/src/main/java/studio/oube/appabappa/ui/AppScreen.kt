@@ -122,6 +122,7 @@ private class AppContent(
         StatusScreen(
             mood = monitor.mood,
             reason = monitor.reason,
+            approaching = monitor.approaching,
             who = settings.who,
             lightEnabled = settings.lightEnabled,
             parked = monitor.parked,
@@ -146,6 +147,7 @@ private class AppContent(
             progress = monitor.demo?.takeIf { it.sceneId == sceneId },
             mood = monitor.mood,
             reason = monitor.reason,
+            approaching = monitor.approaching,
             who = settings.who,
             lightEnabled = settings.lightEnabled,
             layout = layout,
