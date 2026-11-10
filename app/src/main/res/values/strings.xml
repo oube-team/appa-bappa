@@ -3,6 +3,4 @@
     <string name="app_name">아빠 바빠</string>
     <string name="notification_channel_name">운전 상황 확인</string>
     <string name="notification_text">운전자가 바쁜지 확인하고 있어요</string>
-    <string name="speed_permission_needed">차속 권한이 없어서 운전 중 바쁜 순간을 알아챌 수 없어요. 차속 권한은 위치 정보 권한으로 표시돼요. 여기를 눌러 위치 정보 권한을 허용해 보세요.</string>
-    <string name="speed_permission_blocked">차속 권한이 없어서 운전 중 바쁜 순간을 알아챌 수 없어요. 위치 정보 권한을 두 번 거절하면 다시 물어볼 수 없어요. 앱을 삭제한 뒤 새로 설치하면 다시 물어봐요.</string>
 </resources>

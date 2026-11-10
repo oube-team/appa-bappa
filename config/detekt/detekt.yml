@@ -1,0 +1,19 @@
+# detekt 기본 규칙 위에 이 앱의 코드에 맞는 설정을 추가한다. Compose 관련 설정은 detekt 문서의 Compose 권장 설정이다.
+naming:
+  FunctionNaming:
+    # 컴포저블은 관례대로 대문자로 시작한다.
+    ignoreAnnotated: ['Composable']
+complexity:
+  LongParameterList:
+    # 컴포저블은 화면 상태와 이벤트를 매개변수로 전달받는다.
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    # 값을 하나씩 대응시키는 when은 분기가 많아도 읽기 어렵지 않다.
+    ignoreSimpleWhenEntries: true
+style:
+  MagicNumber:
+    # 화면 크기와 색 같은 디자인 값은 Pleos 토큰을 옮긴 속성이나 컴포저블 안에서 사용한다.
+    ignorePropertyDeclaration: true
+    ignoreAnnotated: ['Composable']
+    # 밝기 단계처럼 enum 항목마다 정한 값은 항목 이름이 그 값의 뜻이다.
+    ignoreEnums: true

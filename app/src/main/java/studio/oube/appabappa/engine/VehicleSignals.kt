@@ -1,6 +1,6 @@
 package studio.oube.appabappa.engine
 
-private const val KMH_PER_MPS = 3.6
+internal const val KMH_PER_MPS = 3.6
 
 enum class Gear {
     PARK,

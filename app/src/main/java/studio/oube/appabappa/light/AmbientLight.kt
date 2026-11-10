@@ -15,6 +15,11 @@ private const val ORIGINAL_COLOR_KEY = "original_color"
 private const val CHANGE_FROM_KEY = "change_from_color"
 private const val CHANGE_TO_KEY = "change_to_color"
 private const val GREEN_MILLIS = 3_000L
+
+// 초록으로 다 바뀐 뒤 GREEN_MILLIS 동안 켜 두도록, 변경하는 시간(FADE_MILLIS)만큼 더 기다렸다가 원래 색으로 되돌린다.
+// 앱 화면도 이 시간 동안 고마움을 전하는 문구를 보여 준다(MoodTracker).
+internal const val GREEN_SHOW_MILLIS = FADE_MILLIS + GREEN_MILLIS
+
 private const val STOP_TIMEOUT_MILLIS = 2_000L
 
 // 요청이 끝났다는 응답을 수신해도 색은 조금 뒤에 바뀌어서(에뮬레이터 실측 0.05~1.25초), 이 시간만큼 기다린 뒤
@@ -35,7 +40,7 @@ class AmbientLight(
     private val light: Light,
     private val handler: Handler,
     private val savedColors: SharedPreferences,
-    private val isNight: () -> Boolean
+    private val level: () -> Double
 ) {
     // 원래 색을 알아야 되돌릴 수 있으므로, 원래 색을 확인하기 전에는 조명 색을 변경하지 않는다.
     private var cabin: Cabin? = null
@@ -84,14 +89,13 @@ class AmbientLight(
         handler.removeCallbacks(restoreOriginal)
         if (LightPlan.showsGreen(previous, next)) {
             setColor(LightPlan.GREEN, gradually = true)
-            // 초록으로 다 바뀐 뒤 GREEN_MILLIS 동안 켜 두도록, 변경하는 시간(FADE_MILLIS)만큼 더 기다렸다가 원래 색으로 되돌린다.
-            handler.postDelayed(restoreOriginal, FADE_MILLIS + GREEN_MILLIS)
+            handler.postDelayed(restoreOriginal, GREEN_SHOW_MILLIS)
         } else {
             setColor(LightPlan.colorFor(next), gradually = true)
         }
     }
 
-    // isNight 값이 바뀌면 켜 둔 앱의 색을 새 밝기로 변경한다. 원래 색은 밝기를 낮추지 않아서, 켜 둔 동안에는 변경하지 않는다.
+    // level 값이 바뀌면 켜 둔 앱의 색을 새 밝기로 변경한다. 원래 색은 밝기를 낮추지 않아서, 켜 둔 동안에는 변경하지 않는다.
     fun refresh() {
         wantedColor?.let { setColor(it, gradually = true) }
     }
@@ -181,8 +185,7 @@ class AmbientLight(
         wantedColor = color
         val (area, originalColor) = cabin ?: return false
         // 앱의 색만 밝기를 낮추고, 사용자가 고른 원래 색은 그대로 되돌린다.
-        val level = if (isNight()) LightPlan.NIGHT_LEVEL else LightPlan.DAY_LEVEL
-        val next = color?.let { LightPlan.dimmed(it, level) } ?: originalColor
+        val next = color?.let { LightPlan.dimmed(it, level()) } ?: originalColor
         fade.cancel()
         val from = shownColor
         val unchanged = from != null && LightPlan.sameColor(from, next)

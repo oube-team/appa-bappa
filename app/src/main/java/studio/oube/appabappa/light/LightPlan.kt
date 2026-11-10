@@ -8,23 +8,30 @@ private const val CHANNEL_MAX = 0xFF
 private const val RED_SHIFT = 16
 private const val GREEN_SHIFT = 8
 
+// 설정 화면의 밝기다. 앱의 색을 켤 때 RGB 값에 곱하는 밝기이고(판단, 실차 확인 못 함), 기본값은 MID다. 앱의 색은
+// 운전자가 바깥을 잘 봐야 하는 바쁜 순간에 켜지므로 LOW와 MID는 밝기를 낮추고, 밤에는 실내가 밝으면 바깥이 덜
+// 보여서 세 단계 모두 더 낮춘다.
+// 차의 밝기 설정을 변경하면 나중에 원래 값으로 되돌려야 해서, 그 대신 RGB 값을 낮춘다.
+enum class Brightness(private val dayLevel: Double, private val nightLevel: Double) {
+    LOW(0.5, 0.25),
+    MID(0.8, 0.4),
+    HIGH(1.0, 0.6);
+
+    fun level(night: Boolean): Double = if (night) nightLevel else dayLevel
+}
+
 internal object LightPlan {
     const val ORANGE = 0xFFFF8C00.toInt()
     const val SOFT_ORANGE = 0xFFB36200.toInt()
     const val GREEN = 0xFF2E9E4F.toInt()
     const val RGB_MASK = 0x00FFFFFF
 
-    // 앱의 색을 켤 때 RGB 값에 곱하는 밝기다(판단, 실차 확인 못 함). 앱의 색은 운전자가 바깥을 잘 봐야 하는 바쁜 순간에 켜지므로
-    // 밝기를 낮춘다. 밤에는 실내가 밝으면 바깥이 덜 보여서 더 낮춘다. 차의 밝기 설정을 변경하면 나중에 원래 값으로 되돌려야 해서,
-    // 그 대신 RGB 값을 낮춘다.
-    const val DAY_LEVEL = 0.8
-    const val NIGHT_LEVEL = 0.4
-
     private val busyStates = setOf(BusyState.BUSY, BusyState.VERY_BUSY, BusyState.RECOVERING)
 
     private val ownColors =
         listOf(ORANGE, SOFT_ORANGE, GREEN).flatMap { color ->
-            listOf(DAY_LEVEL, NIGHT_LEVEL).map { level -> dimmed(color, level) }
+            Brightness.entries.flatMap { listOf(it.level(night = false), it.level(night = true)) }
+                .map { level -> dimmed(color, level) }
         }
 
     // null은 조명을 원래 색으로 되돌리라는 뜻이다.

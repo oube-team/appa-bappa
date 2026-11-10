@@ -46,11 +46,17 @@ class LightPlanTest {
 
     @Test
     fun `밝기를 낮춘 앱의 색과 원래 색을 구분한다`() {
-        assertTrue(LightPlan.isOwnColor(LightPlan.dimmed(LightPlan.ORANGE, LightPlan.DAY_LEVEL)))
         assertTrue(
-            LightPlan.isOwnColor(LightPlan.dimmed(LightPlan.SOFT_ORANGE, LightPlan.NIGHT_LEVEL))
+            LightPlan.isOwnColor(
+                LightPlan.dimmed(LightPlan.ORANGE, Brightness.MID.level(night = false))
+            )
         )
-        val nightGreen = LightPlan.dimmed(LightPlan.GREEN, LightPlan.NIGHT_LEVEL)
+        assertTrue(
+            LightPlan.isOwnColor(
+                LightPlan.dimmed(LightPlan.SOFT_ORANGE, Brightness.LOW.level(night = true))
+            )
+        )
+        val nightGreen = LightPlan.dimmed(LightPlan.GREEN, Brightness.HIGH.level(night = true))
         assertTrue(LightPlan.isOwnColor(nightGreen and LightPlan.RGB_MASK))
         assertFalse(LightPlan.isOwnColor(0xFFFFFFFF.toInt()))
     }
@@ -82,8 +88,9 @@ class LightPlanTest {
     }
 
     @Test
-    fun `색각이상이 있어도 밝기로 구분되도록 낮과 밤 모두 주황을 초록보다 밝게 켠다`() {
-        for (level in listOf(LightPlan.DAY_LEVEL, LightPlan.NIGHT_LEVEL)) {
+    fun `색각이상이 있어도 밝기로 구분되도록 모든 밝기 설정에서 낮과 밤 모두 주황을 초록보다 밝게 켠다`() {
+        val levels = Brightness.entries.flatMap { listOf(it.level(false), it.level(true)) }
+        for (level in levels) {
             val orange = luminance(LightPlan.dimmed(LightPlan.ORANGE, level))
             val green = luminance(LightPlan.dimmed(LightPlan.GREEN, level))
             assertTrue("level $level", orange > green)

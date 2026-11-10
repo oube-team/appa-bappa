@@ -23,9 +23,13 @@ internal class BusyCriteria(private val config: BusyConfig) {
         !isMoving(signals) -> null
         isPassingManeuver(signals) -> BusyCause.MANEUVER
         signals.turnSignal != TurnSignal.OFF -> BusyCause.SIGNALING
-        abs(signals.steeringAngleDeg) >= config.turningAngleDeg -> BusyCause.TURNING
+        isTurning(signals) -> BusyCause.TURNING
         else -> null
     }
+
+    // 주행 중에 스티어링 휠을 회전 기준 이상 돌리고 있으면 true를 반환한다.
+    fun isTurning(signals: VehicleSignals): Boolean =
+        isMoving(signals) && abs(signals.steeringAngleDeg) >= config.turningAngleDeg
 
     fun isSoon(signals: VehicleSignals): Boolean {
         val maneuver = demandingManeuver(signals) ?: return false

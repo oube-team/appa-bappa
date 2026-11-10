@@ -11,6 +11,8 @@
     <!-- SDK 문서에는 CAR_LIGHTS만 명시되어 있지만, 조명 색을 변경하려면 CONTROL_CAR_LIGHTS도 필요하다. -->
     <uses-permission android:name="pleos.car.permission.CONTROL_CAR_LIGHTS" />
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <!-- 도착 뒤 화면에서 동승자가 있었는지 알리려고 조수석과 뒷자리의 착좌 여부를 조회한다. -->
+    <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -28,8 +30,12 @@
         <meta-data
             android:name="com.hmg.rotary.ROTARY_SUPPORTED"
             android:value="false" />
+        <!-- 창을 나누거나 주간과 야간이 바뀌어도 화면 상태(직접 조작 시연의 가상의 차 등)를 유지하도록 Activity를 다시
+             생성하지 않는다. 화면은 Compose가 새 창 크기와 야간 모드로 다시 그린다(App Market 기준: 창 크기가 바뀌어도
+             상태 유지). -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

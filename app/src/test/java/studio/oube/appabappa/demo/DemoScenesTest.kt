@@ -19,6 +19,17 @@ class DemoScenesTest {
     }
 
     @Test
+    fun `고속도로 합류 장면은 합류 구간에서 스티어링 휠을 왼쪽으로 돌렸다가 오른쪽으로 되돌려 본선으로 옮긴다`() {
+        val scene = requireNotNull(DemoScenes.find("highway_merge"))
+        // 방향지시등은 9초에 켜고, 합류 지점 150m 앞에는 15초에 닿는다.
+        assertEquals(0.0, scene.signalsAt(14.9)?.steeringAngleDeg)
+        assertEquals(4.0, scene.signalsAt(16.0)?.steeringAngleDeg)
+        assertEquals(-4.0, scene.signalsAt(18.0)?.steeringAngleDeg)
+        assertEquals(0.0, scene.signalsAt(19.0)?.steeringAngleDeg)
+        assertEquals(150.0, scene.signalsAt(15.0)?.nextManeuver?.distanceMeters)
+    }
+
+    @Test
     fun `교차로 좌회전 장면은 신호를 기다리는 동안 FREE를 유지하고 출발하면 BUSY, RECOVERING, FREE 순서로 바뀐다`() {
         assertEquals(listOf(FREE, BUSY, RECOVERING, FREE), statesOf("left_turn"))
     }

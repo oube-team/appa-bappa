@@ -20,8 +20,11 @@ enum class BusyCause {
 
 // 엔진의 판단 결과다. FREE에서는 cause가 null이다. RECOVERING에서는 방금 끝난 바쁜 상황의 근거를 유지한다.
 // turnTypeName은 근처에 있는 회전이나 합류 같은 안내의 종류로, 바쁜 이유를 "합류하고 있어요"처럼 구체적으로 알릴 때 사용한다.
+// turned는 이번 바쁜 상황 동안 스티어링 휠을 회전 기준(BusyConfig의 turningAngleDeg) 이상 돌린 적이 있으면 true다.
+// 회전 안내 지점을 지난 뒤, 실제로 회전했는지 회전하지 않고 지나갔는지 구분해서 알리는 데 사용한다.
 data class BusyStatus(
     val state: BusyState,
     val cause: BusyCause? = null,
-    val turnTypeName: String? = null
+    val turnTypeName: String? = null,
+    val turned: Boolean = false
 )

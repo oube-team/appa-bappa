@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.detekt)
 }
 
@@ -22,6 +23,7 @@ android {
     buildFeatures {
         // 출시 빌드에서 진행 로그를 기록하지 않도록 BuildConfig.DEBUG를 사용한다(AppLog).
         buildConfig = true
+        compose = true
     }
 
     compileOptions {
@@ -38,6 +40,11 @@ android {
     }
 }
 
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
@@ -49,5 +56,10 @@ dependencies {
     implementation(libs.pleos.vehicle)
     implementation(libs.pleos.navihelper)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.animation)
+    implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)
 }

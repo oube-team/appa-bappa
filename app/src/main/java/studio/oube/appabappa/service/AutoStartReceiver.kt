@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import studio.oube.appabappa.AppLog
+import studio.oube.appabappa.settings.SettingsStore
 
 // 앱을 업데이트하면 실행 중이던 서비스가 종료되어서, 부팅 완료 알림뿐 아니라 업데이트 완료 알림(MY_PACKAGE_REPLACED)에서도
 // 서비스를 시작한다.
@@ -16,6 +17,11 @@ private val startActions = setOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_
 class AutoStartReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action !in startActions) return
+        // 설정에서 바쁜 순간 알리기를 껐으면 차가 부팅하거나 앱이 업데이트되어도 서비스를 시작하지 않는다.
+        if (!SettingsStore.of(context).state.value.enabled) {
+            AppLog.i("${intent.action}, busy service is turned off in settings")
+            return
+        }
         AppLog.i("${intent.action}, starting busy service")
         runCatching { context.startForegroundService(Intent(context, BusyService::class.java)) }
             .onFailure { AppLog.w("busy service start failed after ${intent.action}", it) }

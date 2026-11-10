@@ -33,18 +33,29 @@ private fun merge(meters: Double) = Maneuver("TURN_DEVIDE_MERGE", meters)
 private fun turnLeft(meters: Double) = Maneuver("TURN_LEFT", meters)
 
 // 고속도로 합류: 90 km/h로 주행하다가 합류 안내 15초 전에 SOON이 되고, 방향지시등을 켜면 VERY_BUSY가 된다.
+// 오른쪽 진입로에서 왼쪽 본선 차로로 들어가므로 왼쪽 방향지시등을 켠다.
 private val highwayMerge =
     DemoScene(
         "highway_merge",
         listOf(
             DemoStep(9.0) { t -> driving(90.0, nextManeuver = merge(525 - 25 * t)) },
             DemoStep(12.0) { t ->
-                driving(90.0, TurnSignal.RIGHT, nextManeuver = merge(300 - 25 * t))
+                driving(90.0, TurnSignal.LEFT, mergeSteeringDeg(t), merge(300 - 25 * t))
             },
-            DemoStep(2.0, driving(90.0, TurnSignal.RIGHT, nextManeuver = nextExit)),
+            DemoStep(2.0, driving(90.0, TurnSignal.LEFT, nextManeuver = nextExit)),
             DemoStep(15.0, driving(90.0, nextManeuver = nextExit))
         )
     )
+
+// 합류 지점 150m 앞(방향지시등을 켠 지 6초 뒤)부터 본선으로 옮긴다. 90 km/h에서 스티어링 휠을 4도 돌리면 옆으로
+// 1초에 초속 약 1m씩 빨라지므로(축간거리 2.9m, 조향비 15:1로 계산), 왼쪽으로 1.9초, 오른쪽으로 1.9초 돌리면 차로
+// 하나(3.5m)를 옮긴다.
+private fun mergeSteeringDeg(seconds: Double): Double = when {
+    seconds < 6.0 -> 0.0
+    seconds < 7.9 -> 4.0
+    seconds < 9.8 -> -4.0
+    else -> 0.0
+}
 
 // 교차로 좌회전: 신호를 기다리는 동안에는 FREE를 유지하고, 출발해 스티어링 휠을 돌리면 BUSY가 된다.
 private val leftTurn =
@@ -71,7 +82,8 @@ private val redLight =
         listOf(DemoStep(10.0, driving(0.0, TurnSignal.LEFT, nextManeuver = turnLeft(30.0))))
     )
 
-// 급제동: 50 km/h에서 1초 만에 35 km/h로 감속하면 VERY_BUSY가 된다.
+// 급제동: 50 km/h에서 1초 만에 35 km/h로 감속하면 VERY_BUSY가 된다. 도로교통법 제19조 제4항은 위험방지를 위한
+// 경우가 아니면 급제동을 금지하므로, 설명(ui/DemoTexts.kt)에서 앞차가 갑자기 속도를 줄인 상황이라고 알린다.
 private val hardBrake =
     DemoScene(
         "hard_brake",

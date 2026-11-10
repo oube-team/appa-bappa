@@ -181,12 +181,36 @@ class BusyEngineTest {
         assertEquals(
             listOf(
                 BusyStatus(FREE),
-                BusyStatus(BUSY, MANEUVER, "TURN_LEFT"),
-                BusyStatus(RECOVERING, MANEUVER, "TURN_LEFT"),
+                BusyStatus(BUSY, MANEUVER, "TURN_LEFT", turned = true),
+                BusyStatus(RECOVERING, MANEUVER, "TURN_LEFT", turned = true),
                 BusyStatus(FREE)
             ),
             turnLeftAtIntersection().statuses
         )
+    }
+
+    @Test
+    fun `바쁜 상황 동안 스티어링 휠을 90도 이상 돌린 적이 있으면 RECOVERING까지 turned를 유지한다`() {
+        val turned = turnLeftAtIntersection().statuses.filter { it.state != FREE }
+        assertEquals(listOf(true, true), turned.map { it.turned })
+
+        // 좌회전 안내 지점을 스티어링 휠을 돌리지 않고 지나간다.
+        val straight = Ride().apply {
+            drive(4.0) { t -> driving(30.0, nextManeuver = Maneuver("TURN_LEFT", 30 - 8 * t)) }
+            drive(8.0, driving(30.0))
+        }
+        val passed = straight.statuses.filter { it.state == BUSY || it.state == RECOVERING }
+        assertEquals(listOf(BUSY, RECOVERING), passed.map { it.state })
+        assertEquals(listOf(false, false), passed.map { it.turned })
+        assertEquals(listOf("TURN_LEFT", "TURN_LEFT"), passed.map { it.turnTypeName })
+    }
+
+    @Test
+    fun `바쁜 상황이 끝나면 turned를 초기화한다`() {
+        val ride = turnLeftAtIntersection()
+        ride.drive(2.0, driving(50.0, TurnSignal.RIGHT))
+
+        assertEquals(false, ride.statuses.last().turned)
     }
 
     @Test
@@ -216,7 +240,7 @@ class BusyEngineTest {
     @Test
     fun `스티어링 휠만 크게 돌리면 이유로 TURNING을 반환한다`() {
         assertEquals(
-            BusyStatus(BUSY, TURNING),
+            BusyStatus(BUSY, TURNING, turned = true),
             BusyEngine().update(driving(20.0, steeringAngleDeg = 120.0), 0)
         )
     }
@@ -225,7 +249,7 @@ class BusyEngineTest {
     fun `방향지시등을 켜고 스티어링 휠을 크게 돌리면 이유로 SIGNALING을 고른다`() {
         val turning = driving(20.0, TurnSignal.LEFT, steeringAngleDeg = 120.0)
 
-        assertEquals(BusyStatus(BUSY, SIGNALING), BusyEngine().update(turning, 0))
+        assertEquals(BusyStatus(BUSY, SIGNALING, turned = true), BusyEngine().update(turning, 0))
     }
 
     @Test
@@ -246,15 +270,16 @@ class BusyEngineTest {
         )
     }
 
-    // 90 km/h로 달리다 합류 안내 300m 앞에서 오른쪽 방향지시등을 켜고, 합류 지점을 지난 뒤 끈다.
+    // 90 km/h로 달리다 합류 안내 300m 앞에서 왼쪽 방향지시등을 켜고(오른쪽 진입로에서 왼쪽 본선으로 들어간다), 합류
+    // 지점을 지난 뒤 끈다.
     private fun mergeOntoHighway() = Ride().apply {
         val merge = { meters: Double -> Maneuver("TURN_DEVIDE_MERGE", meters) }
         val nextExit = Maneuver("TURN_EXIT_IC_R", 5_000.0)
         drive(4.0) { t -> driving(90.0, nextManeuver = merge(400 - 25 * t)) }
         drive(12.0) { t ->
-            driving(90.0, TurnSignal.RIGHT, nextManeuver = merge(300 - 25 * t))
+            driving(90.0, TurnSignal.LEFT, nextManeuver = merge(300 - 25 * t))
         }
-        drive(2.0, driving(90.0, TurnSignal.RIGHT, nextManeuver = nextExit))
+        drive(2.0, driving(90.0, TurnSignal.LEFT, nextManeuver = nextExit))
         drive(12.0, driving(90.0, nextManeuver = nextExit))
     }
 
