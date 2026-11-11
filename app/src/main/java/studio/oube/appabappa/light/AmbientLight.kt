@@ -56,7 +56,22 @@ class AmbientLight(
     private val colorListener =
         object : AmbientLightBrightnessColorListener {
             override fun onBrightnessColorUpdated(argbColor: Int?) {
-                if (argbColor != null) handler.post { onColorChanged(argbColor or OPAQUE) }
+                handler.post { confirmColor() }
+            }
+
+            // 리스너를 등록한 직후에 지금 켜져 있지 않은 예전 색의 알림을 수신한 적이 있어서(2026-11-11 에뮬레이터), 알림의
+            // 색을 사용하지 않고 조명 색을 다시 조회해 확인한다. 앱이 색 변경을 요청한 직후에 수신한 알림은 앱이 변경한
+            // 결과로 판단해 조명 색을 조회하지 않는다.
+            private fun confirmColor() {
+                val (area) = cabin ?: return
+                if (stopping || since(lastRequestAt) < OWN_CHANGE_WINDOW_MILLIS) return
+                light.getAmbientLightBrightnessColor(
+                    area = area,
+                    onComplete = { color ->
+                        if (color != null) handler.post { onColorChanged(color or OPAQUE) }
+                    },
+                    onFailed = { AppLog.w("ambient light color read failed", it) }
+                )
             }
 
             override fun onFailed(e: Exception) {
@@ -135,17 +150,12 @@ class AmbientLight(
         if (stopping) return
         // SDK 문서에는 알파 값을 0xFF로 고정한다고 명시되어 있지만 에뮬레이터에서는 0이 반환되어서, 조회한 색의 알파 값을 0xFF로 설정한다.
         val current = color?.let { it or OPAQUE }
-        // 앱이 조명 색을 변경한 채로 종료됐을 수 있어서, 시작할 때 조회한 색이 lastChangeColors에 포함되면 그 색 대신
-        // 지난번에 저장한 원래 색을 사용한다.
-        val leftByApp =
-            current != null &&
-                savedColors.lastChangeColors().any { LightPlan.sameColor(it, current) }
-        val original = if (current != null && !leftByApp) {
-            savedColors.edit { putInt(ORIGINAL_COLOR_KEY, current) }
-            current
-        } else {
-            savedColors.savedColor(ORIGINAL_COLOR_KEY)
-        }
+        // 앱이 조명 색을 변경한 채로 종료됐을 수 있어서, 시작할 때 조회한 색이 앱이 켠 색이면 그 색 대신 지난번에 저장한
+        // 원래 색을 사용한다(LightRecord.atStart).
+        val saved = savedColors.lightRecord()
+        val record = saved.atStart(current)
+        if (record != saved) savedColors.save(record)
+        val original = record.original
         AppLog.i("ambient light original color ${hex(original)}, now ${hex(current)}")
         if (original != null) {
             cabin = Cabin(area, original)
@@ -160,8 +170,8 @@ class AmbientLight(
         }
     }
 
-    // 켜져 있던 색(shownColor)이나 원래 색과 같은 알림은 바뀐 것이 없어서 무시한다.
-    // 색 변경을 요청한 직후의 알림이거나 밝기를 낮춘 앱의 색(주황, 연한 주황, 초록)이면 앱이 켠 것이어서 무시한다.
+    // 켜져 있던 색(shownColor)이나 원래 색과 같은 색은 바뀐 것이 없어서 무시한다.
+    // 색 변경을 요청한 직후이거나 밝기를 낮춘 앱의 색(주황, 연한 주황, 초록)이면 앱이 켠 것이어서 무시한다.
     // 그 밖의 색은 사용자가 변경한 색으로 판단해 다음에 되돌릴 원래 색으로 삼는다. 마지막으로 요청한 색과만
     // 비교하면, 사용자가 다른 색으로 변경했다가 앱이 요청했던 색으로 되돌린 경우를 놓친다.
     // 앱이 요청한 직후에 사용자가 색을 변경하거나, 밝기를 낮춘 앱의 색과 똑같은 색을 고르면 알아채지 못한다.
@@ -175,7 +185,7 @@ class AmbientLight(
         if (stopping || unchanged || byApp) return
         AppLog.i("ambient light changed outside the app to ${hex(color)}")
         cabin = current.copy(originalColor = color)
-        savedColors.edit { putInt(ORIGINAL_COLOR_KEY, color) }
+        savedColors.save(savedColors.lightRecord().withUserColor(color))
         shownColor = color
     }
 
@@ -190,7 +200,8 @@ class AmbientLight(
         val from = shownColor
         val unchanged = from != null && LightPlan.sameColor(from, next)
         if (!unchanged) {
-            savedColors.saveChange(from ?: next, next)
+            val record = savedColors.lightRecord().withChange(from ?: next, next)
+            savedColors.save(record, beforeRequest = true)
             if (gradually && from != null) {
                 fade.start(from, next) { step, last ->
                     request(area, step, attempt = 0, verifyAfter = last)
@@ -273,18 +284,23 @@ class AmbientLight(
 
 private fun since(startedAt: Long) = SystemClock.elapsedRealtime() - startedAt
 
+private fun SharedPreferences.lightRecord() = LightRecord(
+    original = savedColor(ORIGINAL_COLOR_KEY),
+    changeFrom = savedColor(CHANGE_FROM_KEY),
+    changeTo = savedColor(CHANGE_TO_KEY)
+)
+
 private fun SharedPreferences.savedColor(key: String) = getInt(key, 0).takeIf { contains(key) }
 
-// 색을 변경하는 도중에 앱이 종료돼도 다음에 시작할 때 조명에 남은 색을 앱이 켠 색으로 판단하도록(rememberOriginal),
-// 요청하기 전에 출발 색과 도착 색을 저장한다. 파일 저장이 요청보다 늦어지지 않도록, apply 대신 commit을 사용한다.
-private fun SharedPreferences.saveChange(from: Int, to: Int) = edit(commit = true) {
-    putInt(CHANGE_FROM_KEY, from)
-    putInt(CHANGE_TO_KEY, to)
-}
+// 색을 변경하는 도중에 앱이 종료돼도 다음에 시작할 때 조명에 남은 색을 앱이 켠 색으로 판단하도록(LightRecord.atStart),
+// 색 변경을 요청하기 전에 저장할 때는(beforeRequest) 파일 저장이 요청보다 늦어지지 않게 apply 대신 commit을 사용한다.
+private fun SharedPreferences.save(record: LightRecord, beforeRequest: Boolean = false) =
+    edit(commit = beforeRequest) {
+        putColor(ORIGINAL_COLOR_KEY, record.original)
+        putColor(CHANGE_FROM_KEY, record.changeFrom)
+        putColor(CHANGE_TO_KEY, record.changeTo)
+    }
 
-// 앱이 마지막으로 조명 색을 변경할 때 켜질 수 있었던 색이다. 서서히 변경했는지는 저장하지 않아서 중간색을 늘 포함한다.
-private fun SharedPreferences.lastChangeColors(): List<Int> {
-    val from = savedColor(CHANGE_FROM_KEY)
-    val to = savedColor(CHANGE_TO_KEY)
-    return if (from != null && to != null) fadePath(from, to) else emptyList()
+private fun SharedPreferences.Editor.putColor(key: String, color: Int?) {
+    if (color != null) putInt(key, color) else remove(key)
 }
