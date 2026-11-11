@@ -4,7 +4,54 @@
 
 ## 테스트 환경
 
-- Pleos Connect v2.1.0 에뮬레이터
+- 에뮬레이터: Pleos Connect v2.1.0(Android API 34, arm64)
+- 화면 규격: 2560 x 1440 px, 160 dpi(에뮬레이터 기본 설정)
+- 앱 영역 전체를 사용하는 가로 창과 화면을 나눈 세로 창에서 동작을 확인했습니다.
+- 실제 차량에서는 실행하지 않았습니다.
+
+## APK
+
+`apk/Oube_AppaBappa_release.apk`(버전 0.1.0, release 빌드)
+
+## 실행 방법
+
+1. Pleos Connect 에뮬레이터를 실행하고 APK를 설치합니다.
+
+   ```
+   adb install apk/Oube_AppaBappa_release.apk
+   ```
+
+2. 에뮬레이터의 앱 목록에서 "아빠 바빠"를 실행합니다.
+3. 권한 안내 화면에서 "계속"을 누르고, 권한 요청 창 두 개에서 "허용"을 누릅니다. 차속 권한은 권한 요청 창에 위치 정보로 표시됩니다.
+
+## 동작 확인
+
+### 가상 콘솔로 주행
+
+1. 가상 콘솔에서 기어를 D로 변속하고 ACCEL을 길게 눌러 가속합니다.
+2. Emulation Controls의 Convenience에서 Turn Signal State를 Blink right로 변경합니다. 앱이 실내 조명을 주황색으로 변경합니다.
+3. Turn Signal State를 Off로 변경합니다. 앱이 주황색을 5초(시속 60km 이상에서 방향지시등을 켰으면 10초) 동안 유지한 뒤, 조명을 초록색으로 3초 동안 켜고 원래 색으로 되돌립니다.
+4. BRAKE를 눌러 정차한 뒤 기어를 P로 변속합니다. 앱이 도착 뒤 화면에 동승자가 기다려 준 횟수와 시간을 표시합니다.
+
+조명 색은 가상 콘솔의 SYSTEMS 칸 AMBIENT 항목과 BODY 칸의 차 그림에 표시됩니다. 가상 콘솔 탭이 브라우저에서 다른 탭 뒤에 있으면 조명 색이 변경되지 않습니다. 주행하는 동안 가상 콘솔 탭을 앞에 두어 주세요.
+
+### 앱의 시연
+
+기어가 P일 때 지금 상태 화면의 "시연"을 누르면 시연 목록이 표시됩니다.
+
+- 장면 재생: 고속도로 합류, 급제동 같은 장면 10개가 있습니다. 장면을 재생하는 동안 앱이 실내 조명 색도 변경합니다.
+- 직접 조작해 보기: 화면의 페달, 스티어링 휠, 방향지시등으로 가상의 차를 운전합니다.
+
+## 빌드
+
+JDK 17과 Android SDK(compileSdk 36)가 필요합니다. Pleos Connect SDK는 빌드할 때 Gradle이 내려받습니다.
+
+```
+./gradlew assembleDebug   # debug APK
+./gradlew check           # 컴파일, Android Lint, detekt, ktlint, 단위 테스트
+```
+
+release 서명 키는 저장소에 포함하지 않았습니다.
 
 ## 오픈소스 라이선스
 
