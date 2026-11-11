@@ -134,7 +134,7 @@ internal fun Pedal(
                     style = Stroke(2f, cap = StrokeCap.Round)
                 )
                 drawPath(shape.grooves, Color(0xFF16191D))
-                // CSS의 brightness 필터처럼, 불투명한 그림 위에 반투명한 검정을 칠해 어둡게 한다.
+                // CSS의 brightness 필터처럼, 불투명한 그림 위에 반투명한 검은색을 칠해 어둡게 한다.
                 val dim =
                     when {
                         hardBraking -> 0.08f

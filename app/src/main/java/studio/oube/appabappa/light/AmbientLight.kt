@@ -16,7 +16,7 @@ private const val CHANGE_FROM_KEY = "change_from_color"
 private const val CHANGE_TO_KEY = "change_to_color"
 private const val GREEN_MILLIS = 3_000L
 
-// 초록으로 다 바뀐 뒤 GREEN_MILLIS 동안 켜 두도록, 변경하는 시간(FADE_MILLIS)만큼 더 기다렸다가 원래 색으로 되돌린다.
+// 초록색으로 다 바뀐 뒤 GREEN_MILLIS 동안 켜 두도록, 변경하는 시간(FADE_MILLIS)만큼 더 기다렸다가 원래 색으로 되돌린다.
 // 앱 화면도 이 시간 동안 고마움을 전하는 문구를 보여 준다(MoodTracker).
 internal const val GREEN_SHOW_MILLIS = FADE_MILLIS + GREEN_MILLIS
 
@@ -171,7 +171,7 @@ class AmbientLight(
     }
 
     // 켜져 있던 색(shownColor)이나 원래 색과 같은 색은 바뀐 것이 없어서 무시한다.
-    // 색 변경을 요청한 직후이거나 밝기를 낮춘 앱의 색(주황, 연한 주황, 초록)이면 앱이 켠 것이어서 무시한다.
+    // 색 변경을 요청한 직후이거나 밝기를 낮춘 앱의 색(주황색, 연한 주황색, 초록색)이면 앱이 켠 것이어서 무시한다.
     // 그 밖의 색은 사용자가 변경한 색으로 판단해 다음에 되돌릴 원래 색으로 삼는다. 마지막으로 요청한 색과만
     // 비교하면, 사용자가 다른 색으로 변경했다가 앱이 요청했던 색으로 되돌린 경우를 놓친다.
     // 앱이 요청한 직후에 사용자가 색을 변경하거나, 밝기를 낮춘 앱의 색과 똑같은 색을 고르면 알아채지 못한다.

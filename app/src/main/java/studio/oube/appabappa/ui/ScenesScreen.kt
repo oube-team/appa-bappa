@@ -52,7 +52,7 @@ internal fun ScenesScreen(
                 .padding(start = layout.padX, end = layout.padX, top = 28.dp, bottom = 32.dp)
         ) {
             PleosText(
-                "기어가 P일 때만 재생해요. 재생 중에 기어를 변경하면 멈춰요",
+                "기어가 P일 때만 시연을 시작할 수 있어요.\n실제 차의 기어를 변속하면 시연을 종료해요",
                 PleosType.bodySmall.normal,
                 colors.text.tertiary
             )

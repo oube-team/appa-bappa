@@ -33,7 +33,7 @@ import studio.oube.appabappa.ui.theme.balanced
 import studio.oube.appabappa.ui.theme.tabular
 
 // 기어가 P가 되어 운전을 마치면 보여 주는 화면이다. 동승자가 있었으면 기다려 준 것에 고마움을 전하고, 혼자 운전했으면
-// 바빴던 순간만 알린다. 바빴던 순간은 조명과 같은 주황으로 이번 운전의 시간 막대에 표시한다.
+// 바빴던 순간만 알린다. 바빴던 순간은 조명과 같은 주황색으로 이번 운전의 시간 막대에 표시한다.
 @Composable
 internal fun AfterScreen(trip: TripSummary, who: String, layout: AppLayout, onDone: () -> Unit) {
     val colors = Pleos.colors
@@ -137,7 +137,7 @@ private fun TripCard(trip: TripSummary, modifier: Modifier) {
     }
 }
 
-// 출발부터 도착까지를 막대 하나로 그리고, 바빴던 순간을 그 자리에 주황으로 칠한다. 긴 운전에서는 몇 초짜리 순간이
+// 출발부터 도착까지를 막대 하나로 그리고, 바빴던 순간을 그 자리에 주황색으로 칠한다. 긴 운전에서는 몇 초짜리 순간이
 // 1dp보다 좁아져 보이지 않으므로, 너비를 4dp 이상으로 설정한다.
 @Composable
 private fun BusyTimeline(trip: TripSummary) {

@@ -75,7 +75,7 @@ class DriveTextsTest {
     fun `RECOVERING이면 엔진이 RECOVERING을 유지하는 시간을 알려 준다`() {
         val progress =
             DriveProgress(BusyStatus(BusyState.RECOVERING, BusyCause.HARD_BRAKING), 10_000)
-        assertEquals("다시 바빠질 수 있어서 10초 동안 주황을 유지해요", ruleText(progress, signals(40.0)))
+        assertEquals("다시 바빠질 수 있어서 10초 동안 주황색을 유지해요", ruleText(progress, signals(40.0)))
     }
 
     @Test
@@ -114,7 +114,7 @@ class DriveTextsTest {
             DriveHint.LANE_CHANGE_TOO_SLOW.text()
         )
         assertEquals(
-            "왼쪽 방향지시등을 30m 전부터 켜지 않아서\n좌회전하지 않고 직진해요",
+            "왼쪽 방향지시등을 교차로 30m 전부터 켜지 않아서\n좌회전하지 않고 직진해요",
             DriveHint.LEFT_TURN_NEEDS_SIGNAL.text()
         )
     }

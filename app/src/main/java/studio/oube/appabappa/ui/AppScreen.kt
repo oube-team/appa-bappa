@@ -75,7 +75,7 @@ fun AppScreen(
             val wide = maxWidth > maxHeight
             val layout = remember(wide) { AppLayout(wide) }
             val screen = AppContent(monitor, settings, speedNotice, layout)
-            // 주행 중에는 지금 상태 화면만 보여 준다(기어가 P가 아니면 서비스가 시연 재생을 중단한다). 주행을 시작하거나
+            // 주행 중에는 지금 상태 화면만 보여 준다(기어가 P가 아니면 서비스가 시연을 종료한다). 주행을 시작하거나
             // 마칠 때 지금 상태 화면을 새로 구성하면 가장자리 빛과 문구가 서서히 바뀌지 않고 한 번에 바뀌므로, 지금 상태
             // 화면은 한 자리(else)에서만 호출한다.
             val scene = demo.playing.takeIf { parked }
@@ -177,7 +177,7 @@ private class AppContent(
 }
 
 // 재생을 요청한 장면이다. 서비스가 그 장면을 재생하기 시작하면 started가 true가 되고, 장면이 끝나거나 기어가 바뀌어
-// 서비스가 재생을 중단하면 playing을 초기화해 지금 상태 화면으로 돌아온다.
+// 서비스가 시연을 종료하면 playing을 초기화해 지금 상태 화면으로 돌아온다.
 @Stable
 private class DemoPlayback(
     private val playingState: MutableState<String?>,

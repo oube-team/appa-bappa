@@ -23,7 +23,7 @@ class MoodTrackerTest {
     }
 
     @Test
-    fun `SOON에서 FREE로 돌아오면 조명이 초록이 되지 않으므로 THANKS 없이 FREE를 보여 준다`() {
+    fun `SOON에서 FREE로 돌아오면 조명이 초록색이 되지 않으므로 THANKS 없이 FREE를 보여 준다`() {
         tracker.update(BusyState.SOON, 0)
 
         assertEquals(Mood.FREE, tracker.update(BusyState.FREE, 250))

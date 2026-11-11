@@ -18,6 +18,16 @@ class DemoTextsTest {
         assertEquals(DemoScenes.all.map { it.id }.toSet(), SceneTexts.keys)
     }
 
+    // 세로 창의 설명 칸은 두 줄 높이라서, 줄바꿈이 두 번 있는 설명은 셋째 줄이 표시되지 않는다.
+    @Test
+    fun `설명에는 줄바꿈을 한 번까지만 사용한다`() {
+        for ((id, text) in SceneTexts) {
+            for ((_, caption) in text.captions) {
+                assertTrue("$id: $caption", caption.count { it == '\n' } <= 1)
+            }
+        }
+    }
+
     @Test
     fun `스티어링 휠 각도는 부호 대신 왼쪽과 오른쪽으로 보여 준다`() {
         assertEquals("0도", steeringText(0.0))
@@ -31,6 +41,6 @@ class DemoTextsTest {
         val text = requireNotNull(SceneTexts["parking"])
 
         assertEquals("후진 기어(R)로 주차하고 있어요", text.captionAt(2.9))
-        assertEquals("주차 기어(P)로 변경해서\n바쁜 상황이 바로 끝났어요", text.captionAt(3.0))
+        assertEquals("기어를 P로 변속해서 바쁜 상황이 끝났어요", text.captionAt(3.0))
     }
 }

@@ -14,7 +14,7 @@ import studio.oube.appabappa.engine.BusyState.VERY_BUSY
 
 class LightPlanTest {
     @Test
-    fun `SOON에서는 은은한 주황을, BUSY와 VERY_BUSY와 RECOVERING에서는 같은 주황을 사용한다`() {
+    fun `SOON에서는 은은한 주황색을, BUSY와 VERY_BUSY와 RECOVERING에서는 같은 주황색을 사용한다`() {
         assertEquals(LightPlan.SOFT_ORANGE, LightPlan.colorFor(SOON))
         assertEquals(LightPlan.ORANGE, LightPlan.colorFor(BUSY))
         assertEquals(LightPlan.ORANGE, LightPlan.colorFor(VERY_BUSY))
@@ -27,13 +27,13 @@ class LightPlanTest {
     }
 
     @Test
-    fun `바쁜 상황이 끝나 FREE가 되면 초록을 잠깐 켠다`() {
+    fun `바쁜 상황이 끝나 FREE가 되면 초록색을 잠깐 켠다`() {
         assertTrue(LightPlan.showsGreen(RECOVERING, FREE))
         assertTrue(LightPlan.showsGreen(BUSY, FREE))
     }
 
     @Test
-    fun `SOON에서 FREE가 될 때와 RECOVERING에서 SOON이 될 때는 초록을 켜지 않는다`() {
+    fun `SOON에서 FREE가 될 때와 RECOVERING에서 SOON이 될 때는 초록색을 켜지 않는다`() {
         assertFalse(LightPlan.showsGreen(SOON, FREE))
         assertFalse(LightPlan.showsGreen(RECOVERING, SOON))
     }
@@ -88,7 +88,7 @@ class LightPlanTest {
     }
 
     @Test
-    fun `색각이상이 있어도 밝기로 구분되도록 모든 밝기 설정에서 낮과 밤 모두 주황을 초록보다 밝게 켠다`() {
+    fun `색각이상이 있어도 밝기로 구분되도록 모든 밝기 설정에서 낮과 밤 모두 주황색을 초록색보다 밝게 켠다`() {
         val levels = Brightness.entries.flatMap { listOf(it.level(false), it.level(true)) }
         for (level in levels) {
             val orange = luminance(LightPlan.dimmed(LightPlan.ORANGE, level))

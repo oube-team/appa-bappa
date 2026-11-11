@@ -39,7 +39,7 @@ internal fun ruleText(
 
         BusyState.RECOVERING -> {
             val seconds = progress.recoverHoldMillis / MILLIS_PER_SECOND
-            "다시 바빠질 수 있어서 ${seconds}초 동안 주황을 유지해요"
+            "다시 바빠질 수 있어서 ${seconds}초 동안 주황색을 유지해요"
         }
 
         BusyState.SOON -> soonRule(config)
@@ -112,13 +112,13 @@ internal fun DriveGuide.label(): String = when (this) {
 // 조작을 반영하지 않았거나 다음에 할 조작을 알릴 때 화면에 잠깐 표시하는 문장이다. 세로 창에서 두 줄이 되는 긴 문장은
 // 마지막 낱말만 아랫줄로 넘어가지 않도록 끊을 자리에 줄바꿈(\n)을 추가한다.
 internal fun DriveHint.text(): String = when (this) {
-    DriveHint.STOP_BEFORE_PARK -> "정차한 뒤에 P로 변경할 수 있어요"
+    DriveHint.STOP_BEFORE_PARK -> "정차한 뒤에 기어를 P로 변속할 수 있어요"
 
-    DriveHint.STOP_BEFORE_REVERSE -> "정차한 뒤에 R로 변경할 수 있어요"
+    DriveHint.STOP_BEFORE_REVERSE -> "정차한 뒤에 기어를 R로 변속할 수 있어요"
 
-    DriveHint.SHIFT_TO_DRIVE -> "출발하려면 기어를 D로 변경해 보세요"
+    DriveHint.SHIFT_TO_DRIVE -> "출발하려면 기어를 D로 변속해 보세요"
 
-    DriveHint.NEUTRAL_GEAR -> "기어가 N이에요. D로 변경해 보세요"
+    DriveHint.NEUTRAL_GEAR -> "기어가 N이에요. D로 변속해 보세요"
 
     DriveHint.REVERSE_STAYS -> "도로에서는 후진할 수 없어서 R에서는 움직이지 않아요"
 
@@ -137,14 +137,14 @@ internal fun DriveHint.text(): String = when (this) {
     DriveHint.LEFT_TURN_TOO_FAST ->
         "좌회전 안내는 도심 도로 장면이라\n시속 ${CITY_LIMIT_KMH.text()}km 이하에서 켤 수 있어요"
 
-    DriveHint.LEFT_TURN_LANE -> "좌회전하려면 왼쪽 방향지시등을 켜고 1차로로 옮겨 보세요"
+    DriveHint.LEFT_TURN_LANE -> "좌회전하려면 왼쪽 방향지시등을 켜고 차로를 1차로로 변경해 보세요"
 
     DriveHint.LEFT_TURN_SIGNAL -> "좌회전하려면 왼쪽 방향지시등을 켜 보세요"
 
     DriveHint.LEFT_TURN_NEEDS_LANE -> "1차로가 아니라서 좌회전하지 않고 직진해요"
 
     DriveHint.LEFT_TURN_NEEDS_SIGNAL ->
-        "왼쪽 방향지시등을 ${ROAD_SIGNAL_METERS.text()}m 전부터 켜지 않아서\n좌회전하지 않고 직진해요"
+        "왼쪽 방향지시등을 교차로 ${ROAD_SIGNAL_METERS.text()}m 전부터 켜지 않아서\n좌회전하지 않고 직진해요"
 
     DriveHint.GUIDE_WHILE_TURNING -> "좌회전을 마친 뒤에 안내를 변경할 수 있어요"
 

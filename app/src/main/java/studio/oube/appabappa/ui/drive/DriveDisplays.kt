@@ -43,7 +43,7 @@ import studio.oube.appabappa.ui.theme.PleosType
 import studio.oube.appabappa.ui.theme.balanced
 import studio.oube.appabappa.ui.theme.tabular
 
-// 방향지시등이 켜지면 계기판처럼 초록(informative_active 야간)으로 깜빡인다.
+// 방향지시등이 켜지면 계기판처럼 초록색(informative_active 야간)으로 깜빡인다.
 internal val SignalGreen = Color(0xFF00E074)
 
 internal val GearOrder = listOf(Gear.PARK, Gear.REVERSE, Gear.NEUTRAL, Gear.DRIVE)

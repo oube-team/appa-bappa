@@ -34,9 +34,9 @@ import studio.oube.appabappa.ui.theme.PleosType
 private typealias ChangeSettings = ((AppSettings) -> AppSettings) -> Unit
 
 private fun Brightness.label(): String = when (this) {
-    Brightness.LOW -> "낮게"
+    Brightness.LOW -> "어둡게"
     Brightness.MID -> "보통"
-    Brightness.HIGH -> "높게"
+    Brightness.HIGH -> "밝게"
 }
 
 private val BrightnessLabels = Brightness.entries.map { it.label() }
@@ -70,9 +70,10 @@ internal fun SettingsScreen(
 
 @Composable
 private fun EnabledSetting(settings: AppSettings, onChange: ChangeSettings) {
+    // 세로 창에서는 설명의 마지막 낱말("않아요")만 아랫줄로 넘어가므로, 쉼표 뒤에 줄바꿈을 추가한다.
     SwitchRow(
         title = "바쁜 순간 알리기",
-        hint = "끄면 바쁜 순간을 알리지 않고, 차가 켜져도 다시 시작하지 않아요",
+        hint = "끄면 바쁜 순간을 알리지 않고,\n차가 켜져도 앱이 다시 시작하지 않아요",
         checked = settings.enabled,
         enabled = true
     ) { value -> onChange { it.copy(enabled = value) } }
@@ -93,7 +94,7 @@ private fun BrightnessSetting(settings: AppSettings, wide: Boolean, onChange: Ch
     val enabled = settings.enabled && settings.lightEnabled
     SettingRow(
         title = "밝기",
-        hint = "하향등이 켜져 있으면 더 어둡게 켜요",
+        hint = "하향등이 켜져 있으면 조명을 더 어둡게 켜요",
         enabled = enabled,
         wide = wide,
         last = false

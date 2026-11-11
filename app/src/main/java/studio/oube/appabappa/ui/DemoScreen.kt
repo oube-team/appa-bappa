@@ -52,7 +52,7 @@ internal fun DemoScreen(
     val elapsed = progress?.elapsedSeconds ?: 0.0
     Box(Modifier.fillMaxSize()) {
         EdgeLight(mood, scale = layout.demoGlowScale)
-        DemoBanner(text?.name ?: sceneId) { PleosButton("멈추기", onStop) }
+        DemoBanner(text?.name ?: sceneId) { PleosButton("종료", onStop) }
         Column(
             verticalArrangement = Arrangement.spacedBy(28.dp),
             modifier = Modifier

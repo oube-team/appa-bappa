@@ -34,7 +34,7 @@ internal fun PermissionScreen(who: String, layout: AppLayout, onContinue: () -> 
         ) {
             Spacer(Modifier.height(layout.permissionTitleGap))
             PleosText(
-                "바쁜 순간을 알아채려면 권한이 필요해요",
+                "운전자가 바쁜지 확인하려면 권한이 필요해요",
                 PleosType.headlineSmall.extraStrong.balanced(),
                 colors.text.primary
             )
@@ -42,18 +42,19 @@ internal fun PermissionScreen(who: String, layout: AppLayout, onContinue: () -> 
             Column(Modifier.fillMaxWidth()) {
                 PermissionItem(
                     "차속",
-                    "방향지시등을 켠 채 달리는지, 급하게 감속하는지 알려면 차속이 필요해요. 다음 창에는 위치 정보로 표시돼요",
+                    "방향지시등을 켠 채 달리는지, 급하게 감속하는지 알려면 차속이 필요해요. 권한 요청 창에는 차속이 위치 정보로 표시돼요",
                     last = false
                 )
+                // 세로 창에서는 설명의 마지막 낱말("표시해요")만 아랫줄로 넘어가므로, 끊을 자리에 줄바꿈을 추가한다.
                 PermissionItem(
                     "알림",
-                    "앱 화면을 닫아도 운전 상황을 확인하는 동안에는 알림 센터에 알림을 표시해요",
+                    "앱 화면을 닫아도 운전 상황을 확인하는 동안에는\n알림 센터에 알림을 표시해요",
                     last = true
                 )
             }
             Spacer(Modifier.weight(1f))
             PleosText(
-                "차속을 허용하지 않으면 후진할 때만 알려 드릴 수 있어요",
+                "차속 권한을 허용하지 않으면 후진할 때만 알려 드릴 수 있어요",
                 PleosType.bodySmall.normal,
                 colors.text.tertiary
             )

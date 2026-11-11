@@ -72,7 +72,7 @@ class DriveSimTest {
     }
 
     @Test
-    fun `시속 5km보다 빠르면 기어를 P와 R로 변경할 수 없다`() {
+    fun `시속 5km보다 빠르면 기어를 P와 R로 변속할 수 없다`() {
         accelerateTo(30.0)
         sim.chooseGear(Gear.PARK, now)
         assertEquals(Gear.DRIVE, sim.gear)

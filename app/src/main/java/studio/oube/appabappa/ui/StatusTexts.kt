@@ -51,13 +51,13 @@ internal fun statusCopy(
         Mood.BUSY -> StatusCopy(
             listOf("$subject 운전에", "집중하고 있어요"),
             reason?.lines()?.let { lines -> lines.soon.takeIf { approaching } ?: lines.busy },
-            "끝나면 초록으로 알려 드릴게요"
+            "바쁜 상황이 끝나면 초록색으로 알려 드릴게요"
         )
 
         Mood.RECOVERING -> StatusCopy(
             listOf("$subject 운전에", "집중하고 있어요"),
             reason?.lines()?.recovering,
-            "다시 바빠질 수 있어서 잠시 주황을 유지해요"
+            "다시 바빠질 수 있어서 잠시 주황색을 유지해요"
         )
 
         Mood.THANKS -> StatusCopy(

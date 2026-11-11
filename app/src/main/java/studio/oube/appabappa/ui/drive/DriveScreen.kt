@@ -84,7 +84,7 @@ internal fun DriveScreen(
         Box(Modifier.fillMaxSize().background(CabinBackground)) {
             DemoBanner("직접 조작") {
                 PleosButton("처음으로", { sim = DriveSim() })
-                PleosButton("멈추기", onStop)
+                PleosButton("종료", onStop)
             }
             Windshield(sim, view, layout, light)
             // 계기판과 조작부의 자리는 규격 창 너비(designWidth)에서 정한 값이다. 실제 창 너비에 맞춰 그리면 창 끝을

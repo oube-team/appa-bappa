@@ -138,7 +138,7 @@ private fun TurnControls(
     Label("방향지시등", spot.x, layout.turnLabelTop, spot.width)
 }
 
-// 켜진 쪽 버튼의 모서리(dotAt)에 깜빡이는 초록 점을 둔다.
+// 켜진 쪽 버튼의 모서리(dotAt)에 깜빡이는 초록색 점을 둔다.
 @Composable
 private fun TurnButton(
     label: String,

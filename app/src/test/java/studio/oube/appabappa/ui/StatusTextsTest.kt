@@ -44,7 +44,7 @@ class StatusTextsTest {
         val left = copyOf(Mood.BUSY, Reason.LEFT_TURN, approaching = true)
         assertEquals(listOf("아빠가 운전에", "집중하고 있어요"), left.title)
         assertEquals("좌회전할 지점이 가까워요", left.reason)
-        assertEquals("끝나면 초록으로 알려 드릴게요", left.sub)
+        assertEquals("바쁜 상황이 끝나면 초록색으로 알려 드릴게요", left.sub)
 
         val merge = copyOf(Mood.BUSY, Reason.MERGE, approaching = true)
         assertEquals("합류나 분기 지점이 가까워요", merge.reason)

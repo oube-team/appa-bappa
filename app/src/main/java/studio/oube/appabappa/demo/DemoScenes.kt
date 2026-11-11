@@ -144,7 +144,7 @@ private val shortSignal =
         )
     )
 
-// 주차: 기어를 R로 변경하면 BUSY가 되고, P로 변경하면 바로 FREE가 된다.
+// 주차: 기어를 R로 변속하면 BUSY가 되고, P로 변속하면 바로 FREE가 된다.
 private val parking =
     DemoScene(
         "parking",

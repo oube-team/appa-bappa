@@ -115,7 +115,7 @@ class BusyService : Service() {
         car.stop()
         lowBeam.stop()
         seats.stop()
-        // 원래 색으로 되돌리는 요청이 끝나기 전에 Vehicle 연결을 해제하면 주황이 남을 수 있어서, 그 응답을 수신한 뒤에 해제한다.
+        // 원래 색으로 되돌리는 요청이 끝나기 전에 Vehicle 연결을 해제하면 주황색이 남을 수 있어서, 그 응답을 수신한 뒤에 해제한다.
         light.stop { sdkCall("vehicle release") { vehicle.release() } }
         AppLog.i("busy service stopped")
         super.onDestroy()
@@ -165,7 +165,7 @@ class BusyService : Service() {
                     ?: signals.toString()
             AppLog.i("state ${status.describe()} -> ${next.describe()}, $source")
             // 조명 색은 상태로만 정하므로, 같은 상태 안에서 이유만 바뀌면 조명을 변경하지 않는다. 시연이 끝나 실제
-            // 판단으로 돌아갈 때도 같은 방식으로 변경해서, 시연이 바쁜 상태에서 끝나면 바쁜 상황이 끝난 때처럼 초록을
+            // 판단으로 돌아갈 때도 같은 방식으로 변경해서, 시연이 바쁜 상태에서 끝나면 바쁜 상황이 끝난 때처럼 초록색을
             // 거친다.
             if (next.state != status.state && lightEnabled) {
                 light.show(previous = status.state, next = next.state)
@@ -185,7 +185,7 @@ class BusyService : Service() {
         tripStore.finish(trip)
     }
 
-    // 설정 화면에서 변경한 조명 설정은 다음 판단 때 반영한다. 실내 조명으로 알리기를 끄면 초록을 거치지 않고 원래 색으로
+    // 설정 화면에서 변경한 조명 설정은 다음 판단 때 반영한다. 실내 조명으로 알리기를 끄면 초록색을 거치지 않고 원래 색으로
     // 되돌리고(FREE에서 FREE), 다시 켜면 지금 상태의 색을 바로 켠다.
     private fun applySettings() {
         val current = settings.state.value
@@ -233,7 +233,7 @@ class BusyService : Service() {
         //     --es demo highway_merge
         const val EXTRA_DEMO_SCENE = "demo"
 
-        // 앱 화면의 멈추기 버튼이 보내는 요청이다.
+        // 화면이 시연을 종료할 때 보내는 요청이다. 종료 버튼이나 Back을 누를 때와, 시연 중에 기어가 P를 벗어날 때 보낸다.
         const val EXTRA_STOP_DEMO = "stop_demo"
     }
 }

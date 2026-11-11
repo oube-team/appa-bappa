@@ -54,14 +54,14 @@ class TripRecorderTest {
 
     @Test
     fun `전진하며 달린 적이 없는 운전은 기록하지 않는다`() {
-        // 다시 주차하려고 R로 변경했다가 P로 돌아온 경우다.
+        // 다시 주차하려고 R로 변속했다가 P로 돌아온 경우다.
         tick(0, Gear.REVERSE, BUSY)
         assertNull(tick(6, Gear.PARK, FREE))
 
         tick(10, Gear.NEUTRAL, FREE)
         assertNull(tick(12, Gear.PARK, FREE))
 
-        // D로 변경했지만 시속 5km를 넘지 않았다.
+        // D로 변속했지만 시속 5km를 넘지 않았다.
         tick(20, Gear.DRIVE, FREE, speedMps = 1.0)
         assertNull(tick(25, Gear.PARK, FREE))
     }

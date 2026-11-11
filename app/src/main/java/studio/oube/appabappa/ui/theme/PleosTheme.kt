@@ -33,7 +33,7 @@ object Pleos {
         get() = LocalPleosColors.current
 }
 
-// Pleos 그림자 스타일 Shadow/Light/Level1(Y 6, Blur 24, 검정 8%)이다. 탭의 고른 칸과 스위치 손잡이에 사용한다.
+// Pleos 그림자 스타일 Shadow/Light/Level1(Y 6, Blur 24, 검은색 8%)이다. 탭의 고른 칸과 스위치 손잡이에 사용한다.
 fun Modifier.level1Shadow(shape: Shape = RectangleShape): Modifier = dropShadow(
     shape,
     Shadow(radius = 24.dp, color = Color.Black.copy(alpha = 0.08f), offset = DpOffset(0.dp, 6.dp))

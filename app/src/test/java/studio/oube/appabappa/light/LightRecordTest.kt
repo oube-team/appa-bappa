@@ -9,7 +9,7 @@ class LightRecordTest {
     private val orange = LightPlan.dimmed(LightPlan.ORANGE, Brightness.MID.level(night = false))
     private val green = LightPlan.dimmed(LightPlan.GREEN, Brightness.MID.level(night = false))
 
-    // 원래 색이 ice일 때 바쁜 상황이 한 번 지나간 뒤의 기록이다. 앱이 조명을 주황, 초록, 원래 색 순서로 변경했다.
+    // 원래 색이 ice일 때 바쁜 상황이 한 번 지나간 뒤의 기록이다. 앱이 조명을 주황색, 초록색, 원래 색 순서로 변경했다.
     private val afterOneBusy =
         LightRecord()
             .atStart(ice)
@@ -23,14 +23,14 @@ class LightRecordTest {
     }
 
     @Test
-    fun `앱이 주황을 켠 채 종료됐다가 시작하면 저장해 둔 원래 색을 사용한다`() {
+    fun `앱이 주황색을 켠 채 종료됐다가 시작하면 저장해 둔 원래 색을 사용한다`() {
         val record = LightRecord().atStart(ice).withChange(ice, orange)
 
         assertEquals(ice, record.atStart(orange).original)
     }
 
     @Test
-    fun `앱이 주황으로 변경하는 도중에 종료됐다가 시작하면 저장해 둔 원래 색을 사용한다`() {
+    fun `앱이 주황색으로 변경하는 도중에 종료됐다가 시작하면 저장해 둔 원래 색을 사용한다`() {
         val record = LightRecord().atStart(ice).withChange(ice, orange)
         val halfway = LightPlan.blend(ice, orange, 0.5)
 
@@ -62,7 +62,7 @@ class LightRecordTest {
     }
 
     @Test
-    fun `사용자가 색을 변경한 뒤에 앱이 주황을 켠 채 종료됐다가 시작하면 사용자가 변경한 색을 원래 색으로 사용한다`() {
+    fun `사용자가 색을 변경한 뒤에 앱이 주황색을 켠 채 종료됐다가 시작하면 사용자가 변경한 색을 원래 색으로 사용한다`() {
         val record = afterOneBusy.withUserColor(white).withChange(white, orange)
 
         assertEquals(white, record.atStart(orange).original)

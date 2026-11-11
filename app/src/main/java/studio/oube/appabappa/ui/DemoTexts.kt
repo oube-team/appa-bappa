@@ -13,7 +13,9 @@ import studio.oube.appabappa.status.Reason
 // 시연 목록과 재생 화면에 보여 줄 장면 이름과 설명이다. 설명은 앞에 적은 시각(장면을 시작한 뒤의 초)부터 보여 주고,
 // 시각은 엔진의 판단 결과가 바뀌는 때(DemoScenes의 주석)에 맞췄다. 설명에는 두 줄 길이를 맞추는 균형 줄바꿈을 사용해서
 // "바빠질 수 / 있어서"처럼 구 중간에서 끊길 수 있으므로, 그렇게 끊기는 설명에는 끊을 자리에 줄바꿈(\n)을 추가한다.
-internal class SceneText(val name: String, private val captions: List<Pair<Double, String>>) {
+// 세로 창의 설명 칸은 두 줄 높이라서 줄바꿈은 한 번만 추가할 수 있다. 가로 창에서 세 줄이 되는 설명은 셋째 줄이 구
+// 중간에서 시작하지 않도록, 떨어지면 안 되는 낱말 사이에 줄바꿈하지 않는 공백(\u00A0)을 사용한다.
+internal class SceneText(val name: String, val captions: List<Pair<Double, String>>) {
     fun captionAt(seconds: Double): String =
         captions.lastOrNull { (from, _) -> from <= seconds }?.second ?: ""
 }
@@ -27,7 +29,7 @@ internal val SceneTexts: Map<String, SceneText> =
                 6.0 to "합류 지점까지 15초 남아서 곧 바빠져요",
                 9.0 to "시속 60km 이상에서 왼쪽 방향지시등을 켜고 합류해요",
                 21.0 to "합류 지점을 지났어요",
-                23.0 to "방향지시등을 껐어요. 다시 바빠질 수 있어서\n10초 동안 주황을 유지해요",
+                23.0 to "방향지시등을 껐어요. 다시 바빠질 수 있어서\n10초 동안 주황색을 유지해요",
                 33.0 to "바쁜 상황이 끝났어요"
             )
         ),
@@ -36,7 +38,7 @@ internal val SceneTexts: Map<String, SceneText> =
             listOf(
                 0.0 to "왼쪽 방향지시등을 켜고 신호를 기다려요.\n정차 중이라 바쁘지 않아요",
                 5.0 to "출발해서 스티어링 휠을 180도 돌려 좌회전해요",
-                9.0 to "회전을 마쳤어요. 다시 바빠질 수 있어서\n5초 동안 주황을 유지해요",
+                9.0 to "회전을 마쳤어요. 다시 바빠질 수 있어서\n5초 동안 주황색을 유지해요",
                 14.0 to "바쁜 상황이 끝났어요"
             )
         ),
@@ -49,7 +51,7 @@ internal val SceneTexts: Map<String, SceneText> =
             listOf(
                 0.0 to "시속 50km로 달리고 있어요",
                 3.0 to "앞차가 갑자기 감속해서\n1초 만에 시속 35km로 급제동해요",
-                4.25 to "다시 바빠질 수 있어서 10초 동안 주황을 유지해요",
+                4.25 to "다시 바빠질 수 있어서\n10초 동안 주황색을 유지해요",
                 14.25 to "바쁜 상황이 끝났어요"
             )
         ),
@@ -58,7 +60,7 @@ internal val SceneTexts: Map<String, SceneText> =
             listOf(
                 0.0 to "시속 60km로 달리고 있어요",
                 3.0 to "앞차와 가까워져서 전방 충돌 경고가 켜졌어요",
-                5.0 to "경고가 꺼졌어요. 다시 바빠질 수 있어서\n10초 동안 주황을 유지해요",
+                5.0 to "경고가 꺼졌어요. 다시 바빠질 수 있어서\n10초 동안 주황색을 유지해요",
                 15.0 to "바쁜 상황이 끝났어요"
             )
         ),
@@ -67,7 +69,7 @@ internal val SceneTexts: Map<String, SceneText> =
             listOf(
                 0.0 to "시속 50km로 달리며 오른쪽 방향지시등을 켰어요",
                 2.0 to "오른쪽 뒤에 차가 있어서 후측방 경고가 켜졌어요",
-                5.0 to "차로를 변경하지 않고 방향지시등을 껐어요.\n다시 바빠질 수 있어서 10초 동안 주황을 유지해요",
+                5.0 to "차로를 변경하지 않고 방향지시등을 껐어요.\n다시 바빠질 수 있어서 10초\u00A0동안 주황색을 유지해요",
                 15.0 to "바쁜 상황이 끝났어요"
             )
         ),
@@ -80,7 +82,7 @@ internal val SceneTexts: Map<String, SceneText> =
             listOf(
                 0.0 to "시속 50km로 달리고 있어요",
                 2.0 to "방향지시등을 1초만 켰어요",
-                3.0 to "다시 바빠질 수 있어서 5초 동안 주황을 유지해요",
+                3.0 to "다시 바빠질 수 있어서\n5초 동안 주황색을 유지해요",
                 8.0 to "바쁜 상황이 끝났어요"
             )
         ),
@@ -88,16 +90,16 @@ internal val SceneTexts: Map<String, SceneText> =
             "주차",
             listOf(
                 0.0 to "후진 기어(R)로 주차하고 있어요",
-                3.0 to "주차 기어(P)로 변경해서\n바쁜 상황이 바로 끝났어요"
+                3.0 to "기어를 P로 변속해서 바쁜 상황이 끝났어요"
             )
         ),
         "back_to_back" to SceneText(
             "이어지는 바쁜 상황",
             listOf(
                 0.0 to "오른쪽 방향지시등을 켰어요",
-                2.0 to "방향지시등을 껐어요. 5초 동안 주황을 유지해요",
-                5.0 to "3초 만에 다시 켜서 초록 없이 주황을 유지해요",
-                7.0 to "방향지시등을 껐어요. 5초 동안 주황을 유지해요",
+                2.0 to "방향지시등을 껐어요.\n5초 동안 주황색을 유지해요",
+                5.0 to "3초 만에 방향지시등을 다시 켜서\n주황색을 유지해요",
+                7.0 to "방향지시등을 껐어요.\n5초 동안 주황색을 유지해요",
                 12.0 to "바쁜 상황이 끝났어요"
             )
         )

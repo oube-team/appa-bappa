@@ -66,7 +66,7 @@ class BusyEngineTest {
     }
 
     @Test
-    fun `기어를 R로 변경하면 정차 중이어도 BUSY가 되고 P로 변경하면 바로 FREE가 된다`() {
+    fun `기어를 R로 변속하면 정차 중이어도 BUSY가 되고 P로 변속하면 바로 FREE가 된다`() {
         val ride = Ride()
         ride.drive(3.0, driving(0.0, gear = Gear.REVERSE))
         ride.drive(1.0, driving(0.0, gear = Gear.PARK))
@@ -410,7 +410,7 @@ class BusyEngineTest {
 
     @Test
     fun `안내 지점을 지나 회전하는 도중에 주차하면 다시 출발해 켠 방향지시등은 지나온 안내로 알리지 않는다`() {
-        // 좌회전해서 주차장에 들어가자마자 스티어링 휠을 돌린 채 정차해 기어를 P로 변경하고, 다시 출발하는 경우다.
+        // 좌회전해서 주차장에 들어가자마자 스티어링 휠을 돌린 채 정차해 기어를 P로 변속하고, 다시 출발하는 경우다.
         val ride = Ride().apply {
             val left = { meters: Double -> Maneuver("TURN_LEFT", meters) }
             drive(2.0) { t ->

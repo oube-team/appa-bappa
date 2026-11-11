@@ -123,8 +123,8 @@ private fun addCrosswalks(shapes: RoadShapes, camera: RoadCamera, entry: Double)
     }
 }
 
-// 건너편 신호등이다. 직진과 좌회전을 함께 허용하는 신호라서 왼쪽 화살표 등과 초록 등을 켠다. 등은 왼쪽부터 빨강, 노랑,
-// 화살표, 초록 순서로 놓인다.
+// 건너편 신호등이다. 직진과 좌회전을 함께 허용하는 신호라서 왼쪽 화살표 등과 초록색 등을 켠다. 등은 왼쪽부터 빨간색, 노란색,
+// 화살표, 초록색 순서로 놓인다.
 private fun addSignal(shapes: RoadShapes, camera: RoadCamera, entry: Double) {
     val z = entry + DriveRoad.CROSS_WIDTH_M + 2
     camera.upright(shapes.signalPole, 6.8, 7.1, 0.0..5.6, z)

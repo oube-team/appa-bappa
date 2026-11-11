@@ -51,7 +51,7 @@ class DemoPlayerTest {
     }
 
     @Test
-    fun `재생 중에 기어가 P를 벗어나면 재생을 중단한다`() {
+    fun `재생 중에 기어가 P를 벗어나면 시연을 종료한다`() {
         player.request("parking")
         player.update(Gear.PARK, 0)
         assertNull(player.update(Gear.DRIVE, 250))
@@ -71,7 +71,7 @@ class DemoPlayerTest {
     }
 
     @Test
-    fun `멈추기를 누르면 재생 중인 장면과 보류한 요청을 모두 초기화한다`() {
+    fun `종료를 누르면 재생 중인 장면과 보류한 요청을 모두 초기화한다`() {
         player.request("parking")
         player.update(Gear.PARK, 0)
         player.stop()
